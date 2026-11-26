@@ -268,11 +268,11 @@ end
 -- ----------------------------------------------------------------
 
 local function BuildFlyout()
-    flyout = CreateFrame("Frame", "WowUtilitiesTrinketFlyout", UIParent, "BackdropTemplate")
+    -- Moldura de tooltip da Blizzard (com fallback para o fundo simples), via Skin
+    flyout = ns.Skin.Panel("WowUtilitiesTrinketFlyout", UIParent)
     flyout:SetFrameStrata("DIALOG")
     flyout:SetClampedToScreen(true)
     flyout:EnableMouse(true)
-    ns.Widgets.Backdrop(flyout, { 0.06, 0.06, 0.08, 0.95 }, { 0.5, 0.5, 0.55, 1 })
     flyout:Hide()
 
     emptyLabel = ns.Widgets.Label(flyout, L["No trinkets in your bags."], "GameFontDisableSmall")

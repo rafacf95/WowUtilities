@@ -155,7 +155,13 @@ ns.RegisterLocale("ptBR", {
     ["Install the LibEditMode addon to position via Edit Mode."] =
         "Instale o addon LibEditMode para posicionar pelo Edit Mode.",
     ["Preview"] = "Pré-visualizar",
-    ["Reset to default"] = "Restaurar padrão",
+    ["Recorded times"] = "Tempos gravados",
+
+    -- Janela /wu (lista de categorias e cabeçalho da página)
+    ["Interface"] = "Interface",
+    ["Tools"] = "Ferramentas",
+    ["Defaults"] = "Padrões",
+    ["Restore the default settings of \"%s\"?"] = "Restaurar as configurações padrão de \"%s\"?",
 
     -- Barra de voo
     ["Flight bar"] = "Barra de voo",

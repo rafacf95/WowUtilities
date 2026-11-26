@@ -29,9 +29,17 @@ local function SelectAll()
     edit:HighlightText()
 end
 
+--- Rolagem no estilo atual (ScrollFrameTemplate); cai no template antigo se faltar.
+local function NewScroll(parent)
+    local name = "WowUtilitiesTextWindowScroll"
+    local ok, scroll = pcall(CreateFrame, "ScrollFrame", name, parent, "ScrollFrameTemplate")
+    if ok and type(scroll) == "table" and rawget(scroll, "ScrollBar") then return scroll end
+    return CreateFrame("ScrollFrame", name, parent, "UIPanelScrollFrameTemplate")
+end
+
 local function Build()
-    frame = W.NewFrame(UIParent, "WowUtilitiesTextWindow")
-    frame:SetSize(640, 440)
+    -- Moldura do painel de Opções (título na barra e X vermelho), via Skin
+    frame = ns.Skin.Window("WowUtilitiesTextWindow", "", 640, 440)
     frame:SetPoint("CENTER")
     frame:SetFrameStrata("FULLSCREEN_DIALOG")
     frame:SetMovable(true)
@@ -40,20 +48,13 @@ local function Build()
     frame:RegisterForDrag("LeftButton")
     frame:SetScript("OnDragStart", frame.StartMoving)
     frame:SetScript("OnDragStop", frame.StopMovingOrSizing)
-    W.Backdrop(frame, { 0.06, 0.06, 0.08, 0.97 }, { 0.5, 0.5, 0.55, 1 })
     frame:Hide()
 
-    frame.title = W.Label(frame, "", "GameFontNormalLarge")
-    frame.title:SetPoint("TOPLEFT", 14, -12)
-
-    local close = CreateFrame("Button", nil, frame, "UIPanelCloseButton")
-    close:SetPoint("TOPRIGHT", -2, -2)
-
     local hint = W.Label(frame, L["Select all and press Ctrl+C to copy"], "GameFontDisableSmall")
-    hint:SetPoint("TOPLEFT", 14, -38)
+    hint:SetPoint("TOPLEFT", 16, -34)
 
-    local scroll = CreateFrame("ScrollFrame", "WowUtilitiesTextWindowScroll", frame, "UIPanelScrollFrameTemplate")
-    scroll:SetPoint("TOPLEFT", 14, -58)
+    local scroll = NewScroll(frame)
+    scroll:SetPoint("TOPLEFT", 16, -54)
     scroll:SetPoint("BOTTOMRIGHT", -34, 46)
 
     edit = CreateFrame("EditBox", nil, scroll)
@@ -85,7 +86,7 @@ end
 function TextWindow:Show(title, text)
     if not frame then Build() end
     shownText = TextWindow.Plain(text)
-    frame.title:SetText(title or "")
+    frame:SetTitle(title or "")
     edit:SetText(shownText)
     frame:Show()
     SelectAll()

@@ -363,6 +363,10 @@ local function OpenPicker(owner, get, set)
     end
 end
 
+-- Compartilhados com o Skin (amostra de cor no estilo da Blizzard)
+Widgets.OpenColorPicker = OpenPicker
+Widgets.CloseColorPicker = ClosePickerOf
+
 function Widgets.ColorSwatch(parent, text, get, set, isDisabled)
     local holder = CreateFrame("Frame", nil, parent)
     holder:SetSize(200, 24)

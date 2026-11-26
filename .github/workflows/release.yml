@@ -1,0 +1,29 @@
+name: Package and release
+
+# Uma tag publica uma versão:
+#   v4.4.0        -> release
+#   v4.4.0-beta1  -> beta
+#   v4.4.0-alpha1 -> alpha
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write # criar a release no GitHub
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    env:
+      CF_API_KEY: ${{ secrets.CF_API_KEY }}          # CurseForge (Settings > API tokens)
+      WAGO_API_TOKEN: ${{ secrets.WAGO_API_TOKEN }}  # Wago Addons (opcional)
+      GITHUB_OAUTH: ${{ secrets.GITHUB_TOKEN }}      # já existe, não precisa criar
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # o empacotador usa o histórico para a versão e o changelog
+
+      - name: Package and upload
+        uses: BigWigsMods/packager@v2

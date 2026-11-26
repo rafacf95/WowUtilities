@@ -1,0 +1,23 @@
+# Saída do empacotador e zips locais
+.release/
+dist/
+*.zip
+
+# Editores e sistema
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*.swp
+
+# Claude Code: configuração local (as compartilhadas, como .claude/settings.json, podem ser versionadas)
+.claude/settings.local.json
+
+# Instruções do Claude Code: ficam só na máquina do autor, não vão para o GitHub
+CLAUDE.md
+
+# Lua
+luac.out
+
+# Python (testes em tests/)
+__pycache__/

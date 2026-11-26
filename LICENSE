@@ -1,0 +1,51 @@
+Custom License for: WowUtilities
+Copyright (c) 2026 rafacf95
+
+The contents of this AddOn, excluding third-party libraries and resources,
+are copyrighted to the author, with all rights reserved.
+
+This AddOn is free to download and use. The author grants you the following
+rights:
+
+1. USE AND UI PACKS. You may use this AddOn in your personal UI and include it
+   in UI packs or compilations, provided the AddOn is distributed unmodified
+   and retains its original name, folder structure, this license and all
+   copyright notices.
+
+2. PRIVATE MODIFICATIONS. You may modify this AddOn for your own private use
+   only. You may not publish, distribute or share modified versions of this
+   AddOn.
+
+3. CONTRIBUTIONS, FEEDBACK AND FORKS. The author does not accept code
+   contributions (pull requests or patches) to this AddOn. You may report bugs
+   and suggest features through the issue tracker of the official repository;
+   the author may use any such report or suggestion without obligation or
+   compensation. Forking the official repository on GitHub is permitted only
+   to the extent allowed by GitHub's Terms of Service, and a fork must not be
+   presented or distributed as a version of this AddOn.
+
+4. NO REDISTRIBUTION. Except as allowed in item 1, you may not reupload,
+   mirror, redistribute, sell, sublicense, or claim ownership of this AddOn or
+   any portion of it, in original or modified form.
+
+5. NO RENAMING. You may not rename this AddOn, including its folders, files or
+   branding.
+
+6. NOTICE. This copyright notice and license must be included in all copies or
+   distributions where the AddOn is provided.
+
+7. THIRD-PARTY SOFTWARE. Optional libraries and addons that this AddOn can work
+   with (for example LibEditMode and LibSharedMedia) are not part of this
+   AddOn, are not covered by this license, and remain under their own licenses.
+
+8. TERMINATION. If you violate this license, your rights under it end
+   automatically.
+
+9. NO WARRANTY. THIS ADDON IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+   EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+   MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO
+   EVENT SHALL THE AUTHOR BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+   WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF
+   OR IN CONNECTION WITH THE ADDON OR THE USE OR OTHER DEALINGS IN THE ADDON.
+
+All rights not explicitly granted in this license are reserved by the author.

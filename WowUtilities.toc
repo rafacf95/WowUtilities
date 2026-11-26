@@ -1,0 +1,79 @@
+## Interface: 16001
+## Title: WowUtilities
+## Notes: Utilities: class/faction colors and elite/rare NPC borders on tooltips, flight durations (tooltip and bar), gold summary at vendors, an armor type filter for the appearance collection and a trinket selector. WoW Forever only.
+## Notes-ptBR: Utilidades: cores de classe/facção e borda de NPCs elite/raros na tooltip, duração dos voos (tooltip e barra), resumo de gold nos vendedores, filtro de tipo de armadura na coleção de aparências e seletor de berloques. Somente WoW Forever.
+## Author: rafacf95
+## X-License: Custom
+## Version: @project-version@
+## SavedVariables: WowUtilitiesDB
+## OptionalDeps: LibEditMode, LibSharedMedia-3.0
+## X-Website: https://github.com/rafacf95/WowUtilities
+# Depois de criar o projeto no CurseForge/Wago, descomente e preencha (o empacotador lê estas linhas):
+# ## X-Curse-Project-ID: 000000
+# ## X-Wago-ID: xxxxxxxx
+## IconTexture: Interface\Icons\INV_Misc_Note_01
+
+Locales\Locales.lua
+Locales\ptBR.lua
+
+Core.lua
+Config.lua
+SettingSpecs.lua
+StyleCatalog.lua
+Commands.lua
+
+Tooltip\ClassColors.lua
+Tooltip\FactionColors.lua
+Tooltip\NameResolver.lua
+Tooltip\UnitResolver.lua
+Tooltip\NpcBorder.lua
+Tooltip\Decorators.lua
+Tooltip\TooltipDecorator.lua
+Tooltip\TooltipModule.lua
+
+Taxi\TaxiCompat.lua
+Taxi\TaxiDatabase.lua
+Taxi\TaxiEstimator.lua
+Taxi\TaxiRecorder.lua
+Taxi\TaxiTooltip.lua
+Taxi\TaxiClearConfirm.lua
+Taxi\TaxiCommand.lua
+
+Bar\Anchoring.lua
+Bar\AnchorSettings.lua
+Bar\Positioner.lua
+Bar\FlightCastBar.lua
+
+Vendor\MoneyFormat.lua
+Vendor\VendorSession.lua
+Vendor\VendorTracker.lua
+Vendor\VendorReporter.lua
+
+Wardrobe\ArmorType.lua
+Wardrobe\ArmorFilter.lua
+Wardrobe\ArmorDropdown.lua
+Wardrobe\WardrobeIntegration.lua
+Items\ItemLevel.lua
+Items\LevelText.lua
+Items\BagItemLevel.lua
+Items\CharacterSlots.lua
+Items\CharacterItemLevel.lua
+Items\EnchantInfo.lua
+Items\EnchantAbbreviation.lua
+Items\CharacterEnchants.lua
+Trinkets\TrinketScanner.lua
+Trinkets\TrinketSwapper.lua
+Trinkets\TrinketSelector.lua
+
+UI\Widgets.lua
+UI\TextWindow.lua
+UI\ConfigWindow.lua
+
+Debug.lua
+DebugWardrobe.lua
+DebugTrinkets.lua
+DebugBags.lua
+DebugCharacter.lua
+DebugEnchants.lua
+DebugEditMode.lua
+DebugAnchors.lua

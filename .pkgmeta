@@ -1,0 +1,15 @@
+# Configuração do empacotador (BigWigsMods/packager) para o CurseForge, Wago e GitHub Releases.
+# A LibEditMode e a LibSharedMedia são dependências OPCIONAIS: o jogador as instala à parte,
+# portanto este arquivo não declara externals.
+package-as: WowUtilities
+
+# Fora do zip distribuído (continuam no repositório)
+ignore:
+  - .github
+  - .gitignore
+  - .pkgmeta
+  - CLAUDE.md
+  - tests
+  - dist
+  - README.md
+  - CHANGELOG.md

@@ -324,6 +324,7 @@ function FontString:SetNonSpaceWrap() end
 function FontString:SetMaxLines() end
 function FontString:SetShadowOffset() end
 function FontString:GetStringWidth() return #(S(self).text or "") * 6 end
+function FontString:GetStringHeight() return 12 end
 
 -- ----- Frame -----
 local Frame = Class("Frame", "Region")
@@ -403,6 +404,8 @@ function Button:GetFontString() return nil end
 local CheckButton = Class("CheckButton", "Button")
 function CheckButton:SetChecked(v) S(self).checked = v and true or false end
 function CheckButton:GetChecked() return S(self).checked == true end
+function CheckButton:SetCheckedTexture(t) S(self).checkedTexture = t end
+function CheckButton:SetDisabledCheckedTexture(t) S(self).disabledCheckedTexture = t end
 function CheckButton:Click(button)
     if S(self).enabled == false then return end
     S(self).checked = not S(self).checked
@@ -415,7 +418,10 @@ function Dropdown:SetupMenu(generator) S(self).generator = generator; self:Gener
 function Dropdown:GenerateMenu()
     local root = { radios = {} }
     function root:CreateRadio(label, isSelected, onSelect)
-        self.radios[#self.radios + 1] = { label = label, isSelected = isSelected, onSelect = onSelect }
+        local description = { label = label, isSelected = isSelected, onSelect = onSelect, initializers = {} }
+        function description:AddInitializer(fn) self.initializers[#self.initializers + 1] = fn end
+        self.radios[#self.radios + 1] = description
+        return description
     end
     S(self).generator(self, root)
     S(self).menu = root
@@ -519,7 +525,53 @@ function CreateFrame(kind, name, parent, template)
     if type(template) == "string" and template:find("BackdropTemplate") then
         for key, fn in pairs(BackdropMethods) do rawset(obj, key, fn) end
     end
+    if type(template) == "string" and not VARIANT.noTemplates then
+        for each in template:gmatch("[^,%s]+") do
+            if H.templates[each] then H.templates[each](obj) end
+        end
+    end
     return obj
+end
+
+-- Templates da Blizzard simulados (só as peças que o addon usa; ver /wu debug ui).
+-- Variações com noTemplates ficam sem eles para testar os fallbacks do Skin.
+H.templates = {
+    SettingsFrameTemplate = function(obj)
+        obj.NineSlice = New("Frame", nil, obj)
+        obj.NineSlice.Text = New("FontString", nil, obj.NineSlice)
+        obj.Bg = New("Frame", nil, obj)
+        obj.ClosePanelButton = New("Button", nil, obj)
+    end,
+    TooltipBackdropTemplate = function(obj) obj.NineSlice = New("Frame", nil, obj) end,
+    ScrollFrameTemplate = function(obj) obj.ScrollBar = New("Frame", nil, obj) end,
+    ColorSwatchTemplate = function(obj)
+        obj.Color = New("Texture", nil, obj)
+        obj.SwatchBg = New("Texture", nil, obj)
+        obj.InnerBorder = New("Texture", nil, obj)
+    end,
+    MinimalSliderWithSteppersTemplate = function(obj)
+        obj.Slider = New("Slider", nil, obj)
+        obj.RightText = New("FontString", nil, obj)
+        local callbacks = {}
+        function obj:Init(value, minValue, maxValue, steps, formatters)
+            self.formatters = formatters
+            self.Slider:SetMinMaxValues(minValue, maxValue)
+            self.Slider:SetValue(value)
+        end
+        function obj:RegisterCallback(event, fn, owner) callbacks[#callbacks + 1] = { fn = fn, owner = owner } end
+        function obj:SetValue(v) self.Slider:SetValue(v) end
+        function obj:GetValue() return self.Slider:GetValue() end
+        function obj:SetEnabled(flag) self.enabled = flag end
+        obj.Slider:SetScript("OnValueChanged", function(_, value)
+            local format = obj.formatters and obj.formatters[MinimalSliderWithSteppersMixin.Label.Right]
+            if format then obj.RightText:SetText(format(value)) end
+            for _, c in ipairs(callbacks) do c.fn(c.owner, value) end
+        end)
+    end,
+}
+if not VARIANT.noTemplates then
+    MinimalSliderWithSteppersMixin = { Event = { OnValueChanged = "OnValueChanged" }, Label = { Right = "Right" } }
+    C_Texture = { GetAtlasInfo = function(name) return { width = 16, height = 16, file = name } end }
 end
 
 --- Procura o primeiro objeto criado que satisfaz `pred`.
@@ -1547,22 +1599,37 @@ test("trinkets: disposicao horizontal e item que saiu da bolsa", function()
 end)
 
 -- ----- Janela /wu -----
-local function Labeled(kind, label)
+local Window = ns.ConfigWindow
+local PAGE_TITLES = { tooltip = "Tooltip", items = "Items", wardrobe = "Wardrobe",
+                      flight = "Flight", vendor = "Vendor", trinkets = "Trinkets" }
+
+--- Botão da lista de categorias com esse título.
+local function CategoryButton(title)
     return H.find(function(o)
-        if S(o).kind ~= kind then return false end
-        local field = rawget(o, "text") or rawget(o, "label")
-        return field and S(field).text == label
+        local label = S(o).kind == "Button" and rawget(o, "Label")
+        return label and S(label).text == title
     end)
 end
 
-test("ui: /wu abre a janela e todas as abas montam", function()
+--- Slider interno do controle (template da Blizzard ou fallback).
+local function InnerSlider(control)
+    return rawget(control, "Slider") or H.find(function(o) return S(o).kind == "Slider" and S(o).parent == control end)
+end
+
+test("ui: /wu abre a janela e a lista de categorias troca as paginas", function()
     SlashCmdList.WOWUTILITIES("")
-    check(WowUtilitiesConfig:IsShown(), "janela aberta")
-    for _, name in ipairs({ "Tooltip", "Flight", "Vendor", "Wardrobe", "Trinkets", "Items" }) do
-        local tab = H.find(function(o) return S(o).kind == "Button" and S(o).text == L[name] end)
-        check(tab, "aba " .. name)
-        tab:Click()
+    local frame = WowUtilitiesConfig
+    check(frame:IsShown(), "janela aberta")
+    eq(frame.skinned == true, not VARIANT.noTemplates, "moldura do painel de Opcoes")
+    eq(Window:Current(), "tooltip", "primeira pagina")
+    for id, key in pairs(PAGE_TITLES) do
+        local button = CategoryButton(L[key])
+        check(button, "categoria " .. key)
+        button:Click()
+        eq(Window:Current(), id, "pagina " .. key)
     end
+    check(CategoryButton(L["Interface"]) == nil and H.findText(L["Interface"]), "grupo Interface")
+    check(H.findText(L["Tools"]), "grupo Ferramentas")
     check(H.find(function(o)
         return S(o).kind == "FontString" and type(S(o).text) == "string" and S(o).text:find("dev", 1, true)
             and S(o).text:find("rafacf95", 1, true)
@@ -1571,7 +1638,7 @@ test("ui: /wu abre a janela e todas as abas montam", function()
 end)
 
 test("ui: caixa de selecao grava a configuracao", function()
-    local box = Labeled("CheckButton", L["Show item level on equipment in your bags"])
+    local box = Window:Control("items.itemLevel.enabled")
     check(box, "caixa encontrada")
     check(box:GetChecked(), "marcada")
     box:Click()
@@ -1580,53 +1647,99 @@ test("ui: caixa de selecao grava a configuracao", function()
     eq(ns.Config:Get("items.itemLevel.enabled"), true, "religado")
 end)
 
-test("ui: slider e dropdown gravam a configuracao", function()
-    local holder = Labeled("Frame", L["Grid columns"])
-    check(holder, "slider encontrado")
-    local slider = H.find(function(o) return S(o).kind == "Slider" and S(o).parent == holder end)
-    H.slide(slider, 7)
+test("ui: slider e menu gravam a configuracao", function()
+    local columns = Window:Control("trinkets.columns")
+    H.slide(InnerSlider(columns), 7)
     eq(ns.Config:Get("trinkets.columns"), 7, "colunas")
     ns.Config:Set("ui.allowWindowEdit", true) -- com o Edit Mode, a disposicao fica travada na /wu
-    local layout = Labeled("Frame", L["Layout"])
-    local button = H.find(function(o) return S(o).parent == layout and rawget(o, "arrow") end)
-    H.script(button, "OnMouseUp")
-    local row = H.find(function(o)
-        return S(o).kind == "Button" and rawget(o, "text") and S(rawget(o, "text")).text == L["Horizontal"] and o:IsShown()
-    end)
-    check(row, "linha Horizontal")
-    row:Click()
+    local layout = Window:Control("trinkets.orientation")
+    local menu = S(layout).menu
+    if menu then -- menu da Blizzard (WowStyle1DropdownTemplate)
+        local picked
+        for _, radio in ipairs(menu.radios) do if radio.label == L["Horizontal"] then picked = radio end end
+        check(picked, "opcao Horizontal")
+        picked.onSelect()
+    else -- fallback: lista propria
+        local button = H.find(function(o) return S(o).parent == layout and rawget(o, "arrow") end)
+        H.script(button, "OnMouseUp")
+        local row = H.find(function(o)
+            return S(o).kind == "Button" and rawget(o, "text") and S(rawget(o, "text")).text == L["Horizontal"] and o:IsShown()
+        end)
+        row:Click()
+    end
     eq(ns.Config:Get("trinkets.orientation"), "horizontal", "disposicao")
     ns.Config:ResetSection("trinkets")
     ns.Config:Set("ui.allowWindowEdit", false)
 end)
 
-test("ui: seletor de cor grava a cor", function()
-    -- A primeira "Cor da borda" criada é a da borda elite (aba Tooltip, montada primeiro).
-    local swatch = Labeled("Frame", L["Border color"])
-    local button = H.find(function(o) return S(o).parent == swatch and rawget(o, "color") end)
-    H.script(button, "OnMouseUp")
-    H.pickColor(0.25, 0.5, 0.75)
-    local c = ns.Config:Get("tooltip.eliteColor")
-    eq(c.g, 0.5, "cor gravada")
-    ns.Config:Set("tooltip.eliteBorder", false)
-    WowUtilitiesConfig:Show()
-    ns.Config:Set("tooltip.eliteColor", { r = 1, g = 0.82, b = 0 })
-    eq(swatch:GetAlpha(), 0.4, "cor desativada com a borda desligada")
-    ns.Config:ResetSection("tooltip")
+test("ui: menu de textura mostra a pre-visualizacao", function()
+    if VARIANT.noTemplates then return end
+    local texture = Window:Control("bar.texture")
+    local first = S(texture).menu.radios[1]
+    eq(#first.initializers, 1, "textura de exemplo na opcao")
 end)
 
-test("ui: opcoes do Edit Mode travadas na /wu, salvo com Forcar edicao", function()
-    local width = Labeled("Frame", L["Width"])
-    check(width, "slider Largura")
+test("ui: seletor de cor grava a cor e desativa com a borda desligada", function()
+    local swatch = Window:Control("tooltip.eliteColor")
+    if VARIANT.noTemplates then
+        H.script(H.find(function(o) return S(o).parent == swatch and rawget(o, "color") end), "OnMouseUp")
+    else
+        swatch:Click()
+    end
+    H.pickColor(0.25, 0.5, 0.75)
+    eq(ns.Config:Get("tooltip.eliteColor").g, 0.5, "cor gravada")
+    ns.Config:Set("tooltip.eliteBorder", false)
+    check(swatch:GetAlpha() < 1, "cor desativada com a borda desligada")
+    ns.Config:ResetSection("tooltip")
+    eq(swatch:GetAlpha(), 1, "reativada")
+end)
+
+test("ui: opcoes do Edit Mode travadas, salvo com Forcar edicao", function()
+    local width = Window:Control("bar.width")
+    local force = Window:Control(L["Force edit"])
     ns.Config:Set("ui.allowWindowEdit", false)
     if VARIANT.editmode then
-        eq(width:GetAlpha(), 0.4, "travado")
-        ns.Config:Set("ui.allowWindowEdit", true)
+        check(width:GetAlpha() < 1, "travado")
+        check(force:GetParent():IsShown(), "caixa Forcar edicao visivel")
+        force:Click()
+        eq(ns.Config:Get("ui.allowWindowEdit"), true, "forcar edicao")
         eq(width:GetAlpha(), 1, "liberado")
         ns.Config:Set("ui.allowWindowEdit", false)
     else
         eq(width:GetAlpha(), 1, "sem Edit Mode nunca trava")
+        check(not force:GetParent():IsShown(), "sem Forcar edicao")
     end
+end)
+
+test("ui: Defaults restaura so a pagina aberta, com confirmacao", function()
+    CategoryButton(L["Flight"]):Click()
+    ns.Config:Set("bar.width", 300)
+    ns.Config:Set("vendor.showZero", true)
+    local defaults = H.find(function(o) return S(o).kind == "Button" and S(o).text == L["Defaults"] end)
+    defaults:Click()
+    local dialog = H.popup
+    check(dialog and dialog.which == "WOWUTILITIES_RESET_PAGE", "confirmacao aberta")
+    eq(ns.Config:Get("bar.width"), 300, "nada muda antes de confirmar")
+    StaticPopupDialogs[dialog.which].OnAccept(dialog, dialog.data)
+    eq(ns.Config:Get("bar.width"), 250, "barra restaurada")
+    eq(ns.Config:Get("vendor.showZero"), true, "outra pagina intacta")
+    ns.Config:ResetSection("vendor")
+end)
+
+test("ui: posicao da janela fica salva", function()
+    local frame = WowUtilitiesConfig
+    frame:ClearAllPoints()
+    frame:SetPoint("TOPLEFT", UIParent, "TOPLEFT", 40, -50)
+    H.script(frame, "OnDragStop")
+    eq(ns.db.ui.window.point, "TOPLEFT", "ponto salvo")
+    eq(ns.db.ui.window.x, 40, "x salvo")
+end)
+
+test("ui: lista de tempos de voo se atualiza", function()
+    CategoryButton(L["Flight"]):Click()
+    ns.TaxiDatabase:Record("P", "Q", 30, 1, 1)
+    Window:Refresh()
+    check(H.findText(string.format(L["Recorded routes: %d"], ns.TaxiDatabase:Count())), "contagem de rotas")
 end)
 
 test("ui: fechar a janela desliga a pre-visualizacao", function()
@@ -1634,6 +1747,10 @@ test("ui: fechar a janela desliga a pre-visualizacao", function()
     check(ns.FlightCastBar:IsPreviewing(), "pre-visualizando")
     WowUtilitiesConfig:Hide()
     check(not ns.FlightCastBar:IsPreviewing(), "desligada")
+end)
+
+test("ui: grade de berloques e janela de texto usam a moldura da Blizzard", function()
+    eq(rawget(WowUtilitiesTrinketFlyout, "NineSlice") ~= nil, not VARIANT.noTemplates, "grade com moldura de tooltip")
 end)
 
 test("ui: /wu com comando desconhecido mostra a ajuda", function()
@@ -1644,7 +1761,24 @@ test("ui: /wu com comando desconhecido mostra a ajuda", function()
 end)
 
 -- ----- Diagnósticos -----
-for _, sub in ipairs({ "player", "bags", "character", "enchants", "editmode", "anchors", "trinkets", "wardrobe" }) do
+test("debug: /wu debug ui descreve o painel de Opcoes e os templates", function()
+    local panel = CreateFrame("Frame", nil, UIParent)
+    panel:SetSize(920, 730)
+    panel.CategoryList = CreateFrame("Frame", nil, panel)
+    panel.CategoryList.Title = panel.CategoryList:CreateFontString(nil, "OVERLAY")
+    panel.CategoryList.Title:SetText("Gameplay")
+    set("SettingsPanel", panel)
+    local lines = ns.DebugUI:Report()
+    local text = table.concat(lines, "\n")
+    has(text, "SettingsPanel: present", "painel encontrado")
+    has(text, "CategoryList: Frame", "arvore do painel")
+    has(text, "text=\"Gameplay\"", "texto das fontes")
+    has(text, "UIPanelButtonTemplate (Button): OK", "template testado")
+    has(text, "MinimalScrollBar (EventFrame): FAIL", "tipo inexistente nao quebra o relatorio")
+    check(not text:find("failed", 1, true), "relatorio sem falha")
+end)
+
+for _, sub in ipairs({ "player", "bags", "character", "enchants", "editmode", "anchors", "trinkets", "wardrobe", "ui" }) do
     test("debug: /wu debug " .. sub .. " gera o relatorio sem falhar", function()
         SlashCmdList.WOWUTILITIES("debug " .. sub)
         local edit = H.find(function(o) return S(o).kind == "EditBox" and S(o).parent == WowUtilitiesTextWindowScroll end)

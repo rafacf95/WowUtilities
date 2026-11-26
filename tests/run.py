@@ -27,10 +27,10 @@ VARIANTS = [
     dict(name="ptBR-lem", locale="ptBR", editmode=True),
     dict(name="ptBR-drag", locale="ptBR", editmode=False),
     dict(name="enUS-lem", locale="enUS", editmode=True),
-    dict(name="deDE-drag", locale="deDE", editmode=False),
+    dict(name="deDE-drag", locale="deDE", editmode=False, noTemplates=True),
     dict(name="legacy-db", locale="enUS", editmode=False, legacyDb=True),
     dict(name="lsm", locale="ptBR", editmode=True, lsm=True),
-    dict(name="old-colorpicker", locale="enUS", editmode=False, oldPicker=True),
+    dict(name="old-colorpicker", locale="enUS", editmode=False, oldPicker=True, noTemplates=True),
     dict(name="coin", locale="ptBR", editmode=False, coin=True),
 ]
 

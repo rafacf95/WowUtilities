@@ -66,7 +66,10 @@ Trinkets\TrinketSwapper.lua
 Trinkets\TrinketSelector.lua
 
 UI\Widgets.lua
+UI\Skin.lua
 UI\TextWindow.lua
+UI\PageBuilder.lua
+UI\ConfigPages.lua
 UI\ConfigWindow.lua
 
 Debug.lua
@@ -77,3 +80,4 @@ DebugCharacter.lua
 DebugEnchants.lua
 DebugEditMode.lua
 DebugAnchors.lua
+DebugUI.lua

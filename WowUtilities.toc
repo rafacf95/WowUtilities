@@ -8,8 +8,8 @@
 ## SavedVariables: WowUtilitiesDB
 ## OptionalDeps: LibEditMode, LibSharedMedia-3.0
 ## X-Website: https://github.com/rafacf95/WowUtilities
-# Depois de criar o projeto no CurseForge/Wago, descomente e preencha (o empacotador lê estas linhas):
-# ## X-Curse-Project-ID: 000000
+## X-Curse-Project-ID: 1833556
+# Depois de criar o projeto no Wago, descomente e preencha (o empacotador lê esta linha):
 # ## X-Wago-ID: xxxxxxxx
 ## IconTexture: Interface\Icons\INV_Misc_Note_01
 

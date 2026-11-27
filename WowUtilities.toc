@@ -64,6 +64,8 @@ Items\CharacterEnchants.lua
 Trinkets\TrinketScanner.lua
 Trinkets\TrinketSwapper.lua
 Trinkets\TrinketSelector.lua
+Resource\PowerSource.lua
+Resource\ResourceBar.lua
 
 UI\Widgets.lua
 UI\Skin.lua
@@ -82,3 +84,4 @@ DebugEditMode.lua
 DebugAnchors.lua
 DebugUI.lua
 DebugInspect.lua
+DebugPower.lua

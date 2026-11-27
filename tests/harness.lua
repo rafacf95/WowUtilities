@@ -627,6 +627,8 @@ Enum = {
     TransmogCollectionType = { Head = 1, Shoulder = 2, Back = 3, Chest = 4, Shirt = 5, Tabard = 6,
                                Wrist = 7, Hands = 8, Waist = 9, Legs = 10, Feet = 11, Wand = 12 },
     ItemClass = { Weapon = 2, Armor = 4 },
+    PowerType = { Mana = 0, Rage = 1, Focus = 2, Energy = 3, ComboPoints = 4 },
+    StatusBarInterpolation = { Immediate = 0, ExponentialEaseOut = 1 },
 }
 
 H.postCalls = {}
@@ -783,6 +785,26 @@ function GetProfessionInfo(index)
     if index == 7 then return "Enchanting", 1, 300, 300, 0, 0, 333 end
     return "Mining", 1, 300, 300, 0, 0, 186
 end
+
+-- ----- Recursos (barra de recurso) -----
+-- No jogo o valor atual é secreto; aqui é um número comum (a barra não faz contas com ele).
+H.power = { type = 1, token = "RAGE", values = { [1] = 40 }, max = { [1] = 100, [4] = 5 } }
+function UnitPowerType() return H.power.type, H.power.token end
+function UnitPower(_, t) return H.power.values[t or H.power.type] or 0 end
+function UnitPowerMax(_, t) return H.power.max[t or H.power.type] or 0 end
+function UnitPowerPercent(_, t, _, curve)
+    local max = UnitPowerMax("player", t)
+    local fraction = max > 0 and UnitPower("player", t) / max or 0
+    return curve and fraction * 100 or fraction
+end
+CurveConstants = { ScaleTo100 = {} }
+PowerBarColor = {
+    MANA = { r = 0, g = 0, b = 1 }, RAGE = { r = 1, g = 0, b = 0 }, ENERGY = { r = 1, g = 1, b = 0 },
+    [0] = { r = 0, g = 0, b = 1 }, [1] = { r = 1, g = 0, b = 0 }, [3] = { r = 1, g = 1, b = 0 },
+}
+function UnitAffectingCombat() return H.combat == true end
+function UnitCanAttack(_, unit) local u = H.units[unit] return u ~= nil and u.hostile == true end
+function UnitIsDead() return false end
 
 -- ----- Dinheiro / vendedor -----
 H.money = 10000
@@ -1464,6 +1486,195 @@ else
     end)
 end
 
+-- ----- Barra de recurso -----
+local resource = ns.ResourceBar
+local function RFrame() return resource:Frame() end
+local function PlayerAs(classFile, powerType, token)
+    H.units.player.classFile = classFile
+    H.power.type, H.power.token = powerType, token
+end
+local function Filled(point) local r, g = point.fill:GetVertexColor() return r == 1 and g == 0.96 end
+local function ShownPoints()
+    local n = 0
+    for _, point in ipairs(RFrame().points) do if point:IsShown() then n = n + 1 end end
+    return n
+end
+local function ResetResource()
+    ns.Config:ResetSection("resource")
+    ns.Config:Set("resource.enabled", true)
+end
+
+test("resource: desligada por padrao; ligada mostra a rage do guerreiro", function()
+    local f = RFrame()
+    check(f, "frame criado")
+    check(not f:IsShown(), "desligada por padrao")
+    ns.Config:Set("resource.enabled", true)
+    check(f:IsShown(), "visivel ao ligar")
+    eq(f.status:GetValue(), 40, "valor da rage")
+    eq(select(2, f.status:GetMinMaxValues()), 100, "maximo")
+    eq(f.text:GetText(), "40", "texto com o valor")
+    local r, g = f.status:GetStatusBarColor()
+    check(r == 1 and g == 0, "cor da rage do jogo")
+    check(not f.combo:IsShown(), "guerreiro sem pontos de combo")
+    eq(f:GetHeight(), 18, "so a barra")
+end)
+
+test("resource: texto, cores e eventos de recurso", function()
+    local f = RFrame()
+    ns.Config:Set("resource.text", "both")
+    eq(f.text:GetText(), "40 / 100", "atual / maximo")
+    ns.Config:Set("resource.text", "percent")
+    eq(f.text:GetText(), "40%", "porcentagem")
+    ns.Config:Set("resource.text", "none")
+    eq(f.text:GetText(), "", "sem texto")
+    H.power.values[1] = 75
+    H.fire("UNIT_POWER_FREQUENT", "player", "RAGE")
+    eq(f.status:GetValue(), 75, "evento do jogador atualiza")
+    H.power.values[1] = 10
+    H.fire("UNIT_POWER_FREQUENT", "party1", "RAGE")
+    eq(f.status:GetValue(), 75, "evento de outra unidade ignorado")
+    ns.Config:Set("resource.colorMode", "class")
+    local c = ns.ClassColors:Get("WARRIOR")
+    eq((f.status:GetStatusBarColor()), c.r, "cor da classe")
+    ns.Config:Set("resource.colorMode", "fixed")
+    eq((select(3, f.status:GetStatusBarColor())), 1, "cor fixa")
+    H.power.values[1] = 40
+    ResetResource()
+end)
+
+test("resource: ladino tem energia e pontos de combo", function()
+    local f = RFrame()
+    PlayerAs("ROGUE", 3, "ENERGY")
+    H.power.values[3], H.power.max[3], H.power.values[4] = 80, 100, 3
+    H.fire("UNIT_DISPLAYPOWER", "player")
+    eq(f.status:GetValue(), 80, "energia")
+    eq((select(2, f.status:GetStatusBarColor())), 1, "amarelo da energia")
+    check(f.combo:IsShown(), "pontos de combo")
+    eq(f:GetHeight(), 18 + 8 + 2, "barra + pontos")
+    eq(ShownPoints(), 5, "cinco pontos")
+    check(Filled(f.points[3]) and not Filled(f.points[4]), "tres cheios")
+    H.power.values[4] = 5
+    H.fire("UNIT_POWER_FREQUENT", "player", "COMBO_POINTS")
+    check(Filled(f.points[5]), "cinco cheios")
+    eq((f.main:GetPoint(1)), "BOTTOMLEFT", "pontos acima da barra")
+    ns.Config:Set("resource.comboSpacing", 6)
+    eq(f:GetHeight(), 18 + 8 + 2, "espaco entre os pontos nao afasta da barra")
+    local _, _, _, x2 = f.points[2]:GetPoint(1)
+    local each = f.points[1]:GetWidth()
+    eq(x2, each + 6, "espaco entre os pontos")
+    ns.Config:Set("resource.comboGap", 10)
+    eq(f:GetHeight(), 18 + 8 + 10, "distancia da barra separada")
+    ns.Config:Set("resource.comboPosition", "below")
+    eq((f.main:GetPoint(1)), "TOPLEFT", "pontos abaixo da barra")
+    ns.Config:Set("resource.comboPoints", false)
+    check(not f.combo:IsShown(), "pontos desligados")
+    eq(f:GetHeight(), 18, "so a barra")
+    PlayerAs("WARRIOR", 1, "RAGE")
+    H.power.values[4] = 0
+    ResetResource()
+end)
+
+test("resource: druida segue a forma", function()
+    local f = RFrame()
+    H.power.values[0], H.power.max[0] = 1500, 3000
+    PlayerAs("DRUID", 0, "MANA")
+    H.fire("UPDATE_SHAPESHIFT_FORM")
+    eq(f.status:GetValue(), 1500, "mana na forma normal")
+    check(not f.combo:IsShown(), "sem pontos fora da forma de felino")
+    PlayerAs("DRUID", 3, "ENERGY")
+    H.fire("UPDATE_SHAPESHIFT_FORM")
+    check(f.combo:IsShown(), "pontos na forma de felino")
+    PlayerAs("DRUID", 1, "RAGE")
+    H.fire("UNIT_DISPLAYPOWER", "player")
+    eq(f.status:GetValue(), 40, "rage na forma de urso")
+    check(not f.combo:IsShown(), "sem pontos na forma de urso")
+    PlayerAs("WARRIOR", 1, "RAGE")
+    H.fire("UNIT_DISPLAYPOWER", "player")
+end)
+
+test("resource: visibilidade em combate, com alvo hostil e pre-visualizacao", function()
+    local f = RFrame()
+    ns.Config:Set("resource.visibility", "combat")
+    check(not f:IsShown(), "fora de combate")
+    H.combat = true
+    H.fire("PLAYER_REGEN_DISABLED")
+    check(f:IsShown(), "em combate")
+    H.combat = false
+    H.fire("PLAYER_REGEN_ENABLED")
+    check(not f:IsShown(), "saiu de combate")
+    ns.Config:Set("resource.visibility", "combatOrTarget")
+    H.units.target = { name = "Boar", guid = "Creature-1", hostile = true, classification = "normal" }
+    H.fire("PLAYER_TARGET_CHANGED")
+    check(f:IsShown(), "alvo hostil")
+    H.units.target = nil
+    H.fire("PLAYER_TARGET_CHANGED")
+    check(not f:IsShown(), "sem alvo")
+    resource:Preview(true)
+    check(f:IsShown(), "pre-visualizacao")
+    resource:Preview(false)
+    check(not f:IsShown(), "fim da pre-visualizacao")
+    ns.Config:Set("resource.enabled", false)
+    resource:Preview(true)
+    check(not f:IsShown(), "desligada nao aparece nem na pre-visualizacao")
+    resource:Preview(false)
+    ResetResource()
+end)
+
+if VARIANT.editmode then
+    test("resource: opcoes, ancora e pre-visualizacao no Edit Mode", function()
+        local lem, f = H.lem, RFrame()
+        ns.Config:Set("resource.visibility", "combat")
+        eq(resource.positioner:Mode(), "editmode", "modo")
+        check(lem:Setting(f, L["Combo points position"]), "opcao dos pontos de combo")
+        check(lem:Setting(f, L["Anchor to"]), "ancoravel")
+        lem:Setting(f, L["Width"]).set("Modern", 300)
+        eq(ns.Config:Get("resource.width"), 300, "largura pelo Edit Mode")
+        check(not f:IsShown(), "escondida fora de combate")
+        lem:Fire("enter")
+        check(f:IsShown(), "aparece no Edit Mode")
+        lem:Fire("exit")
+        check(not f:IsShown(), "some ao sair")
+        lem.frames[f].callback(f, "Modern", "CENTER", 5, 6)
+        eq(ns.db.resourcePositions.Modern.x, 5, "posicao propria por layout")
+        eq(ns.db.positions.Modern and ns.db.positions.Modern.x == 5, false, "nao mexe na barra de voo")
+        ResetResource()
+    end)
+else
+    test("resource: arrastar sem LibEditMode", function()
+        local f = RFrame()
+        ns.Config:Set("resource.visibility", "combat")
+        eq(resource.positioner:Mode(), "drag", "modo")
+        check(not f:IsShown(), "escondida fora de combate")
+        resource:SetUnlocked(true)
+        check(resource:IsUnlocked() and f:IsShown(), "destravada e visivel")
+        check(not ns.FlightCastBar:IsPreviewing() and not WowUtilitiesFlightBar:IsShown(), "barra de voo nao aparece")
+        f:ClearAllPoints()
+        f:SetPoint("CENTER", UIParent, "CENTER", 30, 40)
+        H.script(f, "OnDragStop")
+        eq(ns.db.resourcePositions.Default.x, 30, "posicao salva")
+        resource:SetUnlocked(false)
+        check(not f:IsShown(), "escondida ao travar")
+        resource:ResetPosition()
+        local _, _, _, _, y = f:GetPoint(1)
+        eq(y, 180, "posicao padrao")
+        ResetResource()
+    end)
+end
+
+test("resource: pagina na janela /wu e pre-visualizacao desligada ao fechar", function()
+    ns.ConfigWindow:Toggle()
+    ns.ConfigWindow:Select("resource")
+    eq(ns.ConfigWindow:Current(), "resource", "pagina aberta")
+    check(H.findText(L["Show the resource bar"]), "opcao de ligar")
+    check(ns.ConfigWindow:Control("resource.comboHeight"), "controle dos pontos de combo")
+    resource:Preview(true)
+    ns.ConfigWindow:Select("tooltip") -- os testes de UI seguintes comecam da primeira pagina
+    WowUtilitiesConfig:Hide()
+    check(not resource:IsPreviewing(), "fechar a janela desliga a pre-visualizacao")
+    ResetResource()
+    ns.Config:Set("resource.enabled", false)
+end)
+
 -- ----- Itens: bolsas e personagem -----
 test("items: nivel de item nas bolsas, so para equipamento", function()
     H.advance(0.5)
@@ -1860,7 +2071,29 @@ test("debug: /wu debug inspect le a janela de inspecao e os itens da unidade", f
     set("InspectFrame", nil); set("InspectHeadSlot", nil)
 end)
 
-for _, sub in ipairs({ "player", "bags", "character", "enchants", "editmode", "anchors", "trinkets", "wardrobe", "ui", "inspect" }) do
+test("debug: /wu debug power le recursos, pontos de combo, cores e eventos", function()
+    set("UnitPowerType", function() return 3, "ENERGY" end)
+    set("UnitPower", function(_, t) return ({ [3] = 80, [4] = 3 })[t] or 0 end)
+    set("UnitPowerMax", function(_, t) return ({ [3] = 100, [4] = 5 })[t] or 0 end)
+    set("GetComboPoints", function() return 3 end)
+    set("PowerBarColor", { ENERGY = { r = 1, g = 1, b = 0 } })
+    H.fire("UNIT_POWER_FREQUENT", "player", "ENERGY")
+    local text = table.concat(ns.DebugPower:Report(), "\n")
+    has(text, "UnitPowerType: 3 (ENERGY)", "tipo atual")
+    has(text, " 3 Energy           80 / 100", "energia")
+    has(text, "Types with max > 0: 2", "so tipos com maximo")
+    has(text, "GetComboPoints(player, target) 3", "combo pelo GetComboPoints")
+    has(text, "UnitPower(player, 4) 3 | UnitPowerMax 5", "combo pelo UnitPower")
+    has(text, "ENERGY         1, 1, 0", "cor do jogo")
+    has(text, "PowerBarColor present", "tabela de cores")
+    has(text, "raw UnitPower(player, 3) 80 (type number)", "valor cru")
+    has(text, "StatusBar:SetValue(raw) ok", "barra aceita o valor")
+    has(text, "FontString:SetFormattedText(\"%d / %d\", raw, max) ok", "texto aceita o valor")
+    check(text:find("UNIT_POWER_FREQUENT%s+%d+ | %d+ | player, ENERGY"), "evento contado")
+    check(not text:find("failed", 1, true), "relatorio sem falha")
+end)
+
+for _, sub in ipairs({ "player", "bags", "character", "enchants", "editmode", "anchors", "trinkets", "wardrobe", "ui", "inspect", "power" }) do
     test("debug: /wu debug " .. sub .. " gera o relatorio sem falhar", function()
         SlashCmdList.WOWUTILITIES("debug " .. sub)
         local edit = H.find(function(o) return S(o).kind == "EditBox" and S(o).parent == WowUtilitiesTextWindowScroll end)

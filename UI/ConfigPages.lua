@@ -28,6 +28,10 @@ local function EditModeRows(sample, label)
     }
 end
 
+local function EditModePosition(positioner)
+    return positioner ~= nil and positioner:Mode() == "editmode"
+end
+
 local function Append(list, extra)
     for _, row in ipairs(extra) do list[#list + 1] = row end
     return list
@@ -98,6 +102,60 @@ local items = Append(Append(
     { slider = "items.characterEnchants.fontSize", label = L["Text size"], indent = 1, min = 8, max = 16, step = 1, format = "%d" },
 })
 
+--- Itens de um dropdown descrito no SettingSpecs.
+local function SpecItems(path) return function() return ns.SettingSpecs:Get(path).values end end
+
+local function ResourcePositioner() return ns.ResourceBar.positioner end
+
+local resource = Append({
+    { header = L["Resource bar"] },
+}, EditModeRows("resource.width"))
+Append(resource, {
+    { checkbox = "resource.enabled", label = L["Show the resource bar"] },
+    { text = L["Follows your class and form: mana, rage or energy, plus combo points for Rogues and for Druids in Cat Form."],
+      font = "GameFontDisableSmall" },
+    { dropdown = "resource.visibility", label = L["Visibility"], items = SpecItems("resource.visibility") },
+    { header = L["Bar"] },
+    { dropdown = "resource.texture", label = L["Texture"],
+      items = function() return ns.StyleCatalog:Textures() end,
+      preview = function(item) return item.path, ns.ResourceBar:FillColor() end },
+    { dropdown = "resource.border", label = L["Border"], items = Items(ns.StyleCatalog.borders) },
+    { slider = "resource.borderSize", label = L["Border thickness"] },
+    { color = "resource.borderColor", label = L["Border color"] },
+    { dropdown = "resource.colorMode", label = L["Color"], items = SpecItems("resource.colorMode") },
+    { color = "resource.fillColor", label = L["Bar color"], indent = 1,
+      disabled = function() return Get("resource.colorMode") ~= "fixed" end },
+    { dropdown = "resource.text", label = L["Text"], items = SpecItems("resource.text") },
+    { slider = "resource.fontSize", label = L["Text size"] },
+    { checkbox = "resource.smooth", label = L["Smooth animation"] },
+    { slider = "resource.width", label = L["Width"] },
+    { slider = "resource.height", label = L["Height"] },
+    { slider = "resource.scale", label = L["Scale"] },
+    { header = L["Combo points"] },
+    { checkbox = "resource.comboPoints", label = L["Show combo points (Rogues and Druids in Cat Form)"] },
+    { dropdown = "resource.comboPosition", label = L["Combo points position"], indent = 1,
+      items = SpecItems("resource.comboPosition") },
+    { slider = "resource.comboHeight", label = L["Combo points height"], indent = 1 },
+    { slider = "resource.comboSpacing", label = L["Combo points spacing"], indent = 1 },
+    { slider = "resource.comboGap", label = L["Distance from the bar"], indent = 1 },
+    { color = "resource.comboColor", label = L["Combo point color"], indent = 1 },
+    { color = "resource.comboEmptyColor", label = L["Empty point color"], indent = 1 },
+    { header = L["Position"] },
+    { text = string.format(L["Position: Esc > Edit Mode, then drag \"%s\"."], L["Resource bar"]),
+      when = function() return EditModePosition(ResourcePositioner()) end },
+    { toggle = L["Move bar (drag with the mouse)"],
+      when = function() return ResourcePositioner() ~= nil and not EditModePosition(ResourcePositioner()) end,
+      get = function() return ns.ResourceBar:IsUnlocked() end,
+      set = function(value) ns.ResourceBar:SetUnlocked(value) end },
+    { text = L["Install the LibEditMode addon to position via Edit Mode."], font = "GameFontDisableSmall",
+      when = function() return not EditModePosition(ResourcePositioner()) end },
+    { buttons = {
+        { text = L["Preview"], width = 130,
+          onClick = function() ns.ResourceBar:Preview(not ns.ResourceBar:IsPreviewing()) end },
+        { text = L["Reset position"], width = 130, onClick = function() ns.ResourceBar:ResetPosition() end },
+    } },
+})
+
 local wardrobe = {
     { header = L["Appearance collection"] },
     { checkbox = "wardrobe.enabled", label = L["Show the armor type filter in the collection window"] },
@@ -108,9 +166,6 @@ local wardrobe = {
 -- Ferramentas
 -- ----------------------------------------------------------------
 
-local function EditModePosition(positioner)
-    return positioner ~= nil and positioner:Mode() == "editmode"
-end
 
 local flight = Append({
     { header = L["Flight durations"] },
@@ -201,6 +256,7 @@ Pages.GROUPS = {
     { title = L["Interface"], pages = {
         { id = "tooltip",  title = L["Tooltip"],  sections = { "tooltip" },        rows = tooltip },
         { id = "items",    title = L["Items"],    sections = { "items" },          rows = items },
+        { id = "resource", title = L["Resource bar"], sections = { "resource" },   rows = resource },
         { id = "wardrobe", title = L["Wardrobe"], sections = { "wardrobe" },       rows = wardrobe },
     } },
     { title = L["Tools"], pages = {

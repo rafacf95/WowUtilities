@@ -33,6 +33,14 @@ instead of many, and each one can be turned on or off separately.
   item level, and click a trinket to equip it (out of combat).
 - Shows cooldowns and item levels. Vertical or horizontal layout; dims or hides during combat.
 
+### Resource bar
+- A bar for your resource that follows your class and form: mana, rage or energy (Druids switch
+  with their form), with **combo points** right above or below it for Rogues and for Druids in Cat
+  Form.
+- Resource, class or fixed color; texture, border, size and text (value, value / maximum or
+  percentage). Always visible, only in combat, or in combat or with a hostile target.
+- Turned off by default: enable it in `/wu` > Resource bar.
+
 ### Item level and enchants
 - **Item level** on equipment in the default bags, on the character window and on the Inspect
   window, in item quality color or a fixed color, on the corner you choose.
@@ -43,13 +51,14 @@ instead of many, and each one can be turned on or off separately.
 ## Positioning
 
 - With the optional **LibEditMode** addon,
-  the flight bar and the trinket selector are moved in the game's **Edit Mode**, with a position
-  per layout and their options in the Edit Mode panel. The flight bar can also be **anchored** to
-  other frames (player frame, action bars...) and match their width.
+  the flight bar, the resource bar and the trinket selector are moved in the game's **Edit Mode**,
+  with a position per layout and their options in the Edit Mode panel. The flight bar and the
+  resource bar can also be **anchored** to other frames (player frame, action bars...) and match
+  their width.
 - Without it, unlock and drag them from the settings window.
 
 **LibSharedMedia-3.0** is optional too:
-when installed, its bar textures appear in the flight bar options.
+when installed, its bar textures appear in the flight bar and resource bar options.
 
 ## Commands
 
@@ -58,7 +67,7 @@ when installed, its bar textures appear in the flight bar options.
 | `/wu` or `/wowutilities` | Opens the settings window |
 | `/wu taxi` | Lists the recorded flight times |
 | `/wu taxi clear` | Deletes the recorded flight times (asks for confirmation) |
-| `/wu debug <name>` | Diagnostic report to copy into a bug report: `bags`, `character`, `enchants`, `editmode`, `anchors`, `trinkets`, `wardrobe`, or a unit such as `target` |
+| `/wu debug <name>` | Diagnostic report to copy into a bug report: `bags`, `character`, `enchants`, `inspect`, `power`, `editmode`, `anchors`, `trinkets`, `wardrobe`, `ui`, or a unit such as `target` |
 
 ## Installation
 
@@ -94,9 +103,11 @@ Utilidades para o **WoW Forever** reunidas num só addon, cada uma ligável e de
 - **Vendedores:** resumo de gold ao fechar (vendido, comprado, reparo e saldo).
 - **Coleção de aparências:** filtro por tipo de armadura na aba Itens.
 - **Seletor de berloques:** botões na tela para trocar de berloque com um clique, fora de combate.
+- **Barra de recurso:** mana, raiva ou energia conforme a classe e a forma, com os pontos de combo
+  para Ladinos e Druidas na Forma de Felino (desligada por padrão).
 - **Nível de item e encantamentos:** nas bolsas padrão, na janela de personagem e na janela de inspeção.
 
-Com o addon opcional **LibEditMode**, a barra de voo e o seletor de berloques são posicionados
+Com o addon opcional **LibEditMode**, a barra de voo, a barra de recurso e o seletor de berloques são posicionados
 pelo **Modo de Edição** do jogo (por layout, com âncora em outras janelas). Sem ele, destrave e
 arraste pela janela de configuração.
 

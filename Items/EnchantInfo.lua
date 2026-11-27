@@ -66,8 +66,8 @@ local function Pattern()
     return "^" .. escaped .. "$"
 end
 
-local function ModernTexts(slotID)
-    local data = Call(Fn("C_TooltipInfo", "GetInventoryItem"), "player", slotID)
+local function ModernTexts(unit, slotID)
+    local data = Call(Fn("C_TooltipInfo", "GetInventoryItem"), unit, slotID)
     if type(data) ~= "table" or type(data.lines) ~= "table" then return nil end
     local texts = {}
     for _, line in ipairs(data.lines) do
@@ -77,7 +77,7 @@ local function ModernTexts(slotID)
 end
 
 local scanner
-local function ScanTexts(slotID)
+local function ScanTexts(unit, slotID)
     if type(rawget(_G, "CreateFrame")) ~= "function" then return nil end
     if not scanner then
         local ok, frame = pcall(CreateFrame, "GameTooltip", SCAN_NAME, nil, "GameTooltipTemplate")
@@ -87,7 +87,7 @@ local function ScanTexts(slotID)
     local ok = pcall(function()
         scanner:SetOwner(UIParent, "ANCHOR_NONE")
         scanner:ClearLines()
-        scanner:SetInventoryItem("player", slotID)
+        scanner:SetInventoryItem(unit, slotID)
     end)
     if not ok then return nil end
     local texts = {}
@@ -108,13 +108,14 @@ local function FindName(texts, pattern)
     end
 end
 
---- Nome do encantamento do item do slot (nil se a tooltip não entregou).
-function EnchantInfo:Name(slotID, link)
+--- Nome do encantamento do item do slot da unidade (nil se a tooltip não entregou).
+function EnchantInfo:Name(slotID, link, unit)
+    unit = unit or "player"
     local hit = names[link]
     if hit then return hit end
     local pattern = Pattern()
     if not pattern then return nil end
-    local name = FindName(ModernTexts(slotID), pattern) or FindName(ScanTexts(slotID), pattern)
+    local name = FindName(ModernTexts(unit, slotID), pattern) or FindName(ScanTexts(unit, slotID), pattern)
     if name then
         if size >= CACHE_LIMIT then names, size = {}, 0 end
         names[link] = name
@@ -140,10 +141,12 @@ end
 
 --- Este slot, com este item, aceita encantamento?
 --- opts.countRings: anéis só contam se ligado e o personagem for Encantador.
+--- opts.anyRing: anéis contam sem olhar a profissão (de outro jogador não dá para saber).
 function EnchantInfo:Enchantable(slotID, link, opts)
     if ENCHANTABLE[slotID] then return true end
     if RING_SLOTS[slotID] then
-        return opts ~= nil and opts.countRings == true and self:IsEnchanter()
+        if opts == nil or opts.countRings ~= true then return false end
+        return opts.anyRing == true or self:IsEnchanter()
     end
     if slotID ~= MAIN_HAND and slotID ~= OFF_HAND then return false end
     local _, _, _, equipLoc, _, classID, subClassID = Call(Fn("C_Item", "GetItemInfoInstant"), link)
@@ -154,14 +157,15 @@ function EnchantInfo:Enchantable(slotID, link, opts)
     return OFF_HAND_LOCS[equipLoc] == true
 end
 
---- Estado do item equipado: nil (slot vazio / não aceita encantamento),
---- "missing", ou "enchanted", nome (nome pode ser nil).
-function EnchantInfo:Status(slotID, opts)
-    local link = Call(Fn(nil, "GetInventoryItemLink"), "player", slotID)
+--- Estado do item equipado da unidade (padrão "player"): nil (slot vazio /
+--- não aceita encantamento), "missing", ou "enchanted", nome (nome pode ser nil).
+function EnchantInfo:Status(slotID, opts, unit)
+    unit = unit or "player"
+    local link = Call(Fn(nil, "GetInventoryItemLink"), unit, slotID)
     if type(link) ~= "string" then return nil end
     local id = self:Id(link)
     if id == nil then return nil end
-    if id ~= 0 then return "enchanted", self:Name(slotID, link) end
+    if id ~= 0 then return "enchanted", self:Name(slotID, link, unit) end
     if self:Enchantable(slotID, link, opts) then return "missing" end
     return nil
 end

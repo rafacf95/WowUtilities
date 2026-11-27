@@ -507,7 +507,7 @@ function Tooltip:NumLines() return #(S(self).lines or {}) end
 function Tooltip:SetHyperlink(link) S(self).hyperlink = link end
 function Tooltip:SetInventoryItem(unit, slot)
     S(self).lines = {}
-    for _, text in ipairs(H.inventoryTooltip(slot) or {}) do self:AddLine(text) end
+    for _, text in ipairs(H.inventoryTooltip(slot, unit) or {}) do self:AddLine(text) end
 end
 function Tooltip:GetUnit()
     local unit = H.tooltipUnit
@@ -750,17 +750,20 @@ C_Container = {
     GetContainerItemCooldown = function() return 0, 0, 1 end,
     PickupContainerItem = function() end,
 }
-function GetInventoryItemLink(unit, slot) local e = H.inv[slot] return e and H.link(e.id, e.enchant) end
-function GetInventoryItemQuality(unit, slot) local e = H.inv[slot] return e and H.items[e.id].quality end
-function GetInventoryItemTexture(unit, slot) local e = H.inv[slot] return e and ("icon" .. e.id) end
+-- Inventário de outra unidade (inspeção): H.unitInv[unit]; sem entrada, usa o do jogador.
+H.unitInv = {}
+local function Inv(unit) return (unit and unit ~= "player" and H.unitInv[unit]) or H.inv end
+function GetInventoryItemLink(unit, slot) local e = Inv(unit)[slot] return e and H.link(e.id, e.enchant) end
+function GetInventoryItemQuality(unit, slot) local e = Inv(unit)[slot] return e and H.items[e.id].quality end
+function GetInventoryItemTexture(unit, slot) local e = Inv(unit)[slot] return e and ("icon" .. e.id) end
 function GetInventoryItemCooldown() return 0, 0, 1 end
-function GetInventoryItemID(unit, slot) local e = H.inv[slot] return e and e.id end
+function GetInventoryItemID(unit, slot) local e = Inv(unit)[slot] return e and e.id end
 function PickupInventoryItem() end
 function CursorHasItem() return false end
 function ClearCursor() end
 
-function H.inventoryTooltip(slot)
-    local e = H.inv[slot]
+function H.inventoryTooltip(slot, unit)
+    local e = Inv(unit)[slot]
     if not e then return nil end
     local lines = { H.items[e.id].name }
     if e.enchant and e.enchant ~= 0 then lines[#lines + 1] = ENCHANTED_TOOLTIP_LINE:format(H.enchantNames[e.enchant]) end
@@ -769,7 +772,7 @@ end
 C_TooltipInfo = {
     GetInventoryItem = function(unit, slot)
         local lines = {}
-        for _, text in ipairs(H.inventoryTooltip(slot) or {}) do lines[#lines + 1] = { leftText = text } end
+        for _, text in ipairs(H.inventoryTooltip(slot, unit) or {}) do lines[#lines + 1] = { leftText = text } end
         return { lines = lines }
     end,
 }
@@ -1505,6 +1508,64 @@ test("items: hook do PaperDollItemSlotButton_Update repinta o slot", function()
     PaperDollItemSlotButton_Update(CharacterHeadSlot)
 end)
 
+test("items: nivel e encantamento na janela de inspecao (carrega depois)", function()
+    H.units.target = { name = "Acanon", guid = "Player-1-0003", class = "Paladin", classFile = "PALADIN",
+                       faction = "Alliance", factionName = "Alliance", isPlayer = true, classification = "normal" }
+    H.unitInv.target = { [1] = { id = 1003, enchant = 1888 }, [5] = { id = 1001 }, [11] = { id = 1007 } }
+    check(not ns.InspectSlots:IsInstalled(), "nao instala antes da janela existir")
+
+    -- Blizzard_InspectUI carrega sob demanda (nomes globais restaurados ao fim do teste)
+    for _, name in ipairs({ "InspectFrame", "InspectPaperDollItemsFrame", "InspectPaperDollItemSlotButton_Update" }) do set(name, nil) end
+    local frame = CreateFrame("Frame", "InspectFrame", UIParent)
+    frame.unit = "target"
+    local items = CreateFrame("Frame", "InspectPaperDollItemsFrame", frame)
+    for name, id in pairs(SLOT_IDS) do
+        set("Inspect" .. name .. "Slot", nil)
+        CreateFrame("Button", "Inspect" .. name .. "Slot", items):SetID(id)
+    end
+    set("InspectPaperDollItemSlotButton_Update", function() end)
+    H.fire("ADDON_LOADED", "Blizzard_InspectUI")
+    check(ns.InspectSlots:IsInstalled(), "instalado quando a janela carrega")
+    H.advance(0.5)
+
+    local function Level(button) local t = rawget(button, "wuinspectLevel") return t and t:GetText() end
+    local function Enchant(button) local t = rawget(button, "wuenchant") return t and t:GetText() end
+    eq(Level(InspectHeadSlot), "210", "nivel do item do outro jogador")
+    has(Enchant(InspectHeadSlot), "+4", "encantamento do outro jogador")
+    eq(Enchant(InspectChestSlot), L["No enchant"], "peito sem encantamento")
+    eq(Enchant(InspectFinger0Slot), nil, "anel nao conta por padrao")
+    eq(rawget(CharacterHeadSlot, "wucharacterLevel"):GetText(), "200", "janela de personagem segue o jogador")
+
+    H.professions = {} -- sem Encantamento: na inspecao o anel segue so a opcao
+    ns.Config:Set("items.characterEnchants.inspectCountRings", true)
+    eq(Enchant(InspectFinger0Slot), L["No enchant"], "anel conta na inspecao")
+    check(rawget(CharacterFinger0Slot, "wuenchant") == nil or Enchant(CharacterFinger0Slot) == "", "personagem nao muda")
+
+    H.unitInv.target[1] = { id = 1001 }
+    H.fire("INSPECT_READY", "Player-9-9999")
+    H.advance(0.5)
+    eq(Level(InspectHeadSlot), "210", "INSPECT_READY de outro jogador e ignorado")
+    H.fire("INSPECT_READY", "Player-1-0003")
+    H.advance(0.5)
+    eq(Level(InspectHeadSlot), "200", "INSPECT_READY do jogador da janela repinta")
+
+    H.unitInv.target[1] = { id = 1003 }
+    InspectPaperDollItemSlotButton_Update(InspectHeadSlot)
+    eq(Level(InspectHeadSlot), "210", "gancho repinta o slot")
+
+    ns.Config:Set("items.characterLevel.inspect", false)
+    eq(Level(InspectHeadSlot), "", "item level desligado so na inspecao")
+    eq(rawget(CharacterHeadSlot, "wucharacterLevel"):GetText(), "200", "personagem mantem o item level")
+    ns.Config:Set("items.characterEnchants.inspect", false)
+    eq(Enchant(InspectHeadSlot), "", "encantamento desligado so na inspecao")
+    eq(Enchant(CharacterHeadSlot), L["No enchant"], "personagem mantem o encantamento")
+    ns.Config:Set("items.characterEnchants.inspect", true)
+    ns.Config:Set("items.characterEnchants.enabled", false)
+    eq(Enchant(InspectHeadSlot), "", "desligar o recurso desliga as duas janelas")
+    ns.Config:ResetSection("items")
+    H.units.target, H.unitInv.target = nil, nil
+end)
+
 test("items: id do encantamento no link", function()
     eq(ns.EnchantInfo:Id(H.link(1003, 1888)), 1888, "com encantamento")
     eq(ns.EnchantInfo:Id(H.link(1003)), 0, "sem")
@@ -1778,7 +1839,28 @@ test("debug: /wu debug ui descreve o painel de Opcoes e os templates", function(
     check(not text:find("failed", 1, true), "relatorio sem falha")
 end)
 
-for _, sub in ipairs({ "player", "bags", "character", "enchants", "editmode", "anchors", "trinkets", "wardrobe", "ui" }) do
+test("debug: /wu debug inspect le a janela de inspecao e os itens da unidade", function()
+    local frame = CreateFrame("Frame", nil, UIParent)
+    frame.unit = "mouseover"
+    set("InspectFrame", frame)
+    local head = CreateFrame("Button", nil, frame)
+    head:SetID(1)
+    set("InspectHeadSlot", head)
+    local lines = ns.DebugInspect:Report("")
+    local text = table.concat(lines, "\n")
+    has(text, "== Unit: mouseover (from InspectFrame.unit) ==", "unidade da janela")
+    has(text, "InspectHeadSlot              GetID 1 (expected 1)", "botao encontrado")
+    has(text, "Slot buttons found: 1 of 19", "contagem de botoes")
+    has(text, "InspectFrame values: unit=mouseover", "campo unit listado")
+    has(text, "INSPECT_READY: valid", "evento registrado")
+    has(text, " 1 Head          item 1001", "item lido")
+    has(text, "enchantID 1888 | modern: 2 lines, enchant +4 All Stats | scan: 2 lines, enchant +4 All Stats", "encantamento lido")
+    check(not text:find("failed", 1, true), "relatorio sem falha")
+    has(table.concat(ns.DebugInspect:Report("player"), "\n"), "(from argument)", "unidade pelo argumento")
+    set("InspectFrame", nil); set("InspectHeadSlot", nil)
+end)
+
+for _, sub in ipairs({ "player", "bags", "character", "enchants", "editmode", "anchors", "trinkets", "wardrobe", "ui", "inspect" }) do
     test("debug: /wu debug " .. sub .. " gera o relatorio sem falhar", function()
         SlashCmdList.WOWUTILITIES("debug " .. sub)
         local edit = H.find(function(o) return S(o).kind == "EditBox" and S(o).parent == WowUtilitiesTextWindowScroll end)

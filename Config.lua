@@ -67,12 +67,15 @@ local DEFAULTS = {
             color     = { r = 1.0, g = 1.0, b = 1.0 },
             anchor    = "BOTTOMRIGHT",
             fontSize  = 11,
+            inspect   = true,  -- também na janela de inspeção (mesmo visual)
         },
         characterEnchants = {
             enabled        = true,
             showEnchanted  = true,   -- false = só avisa os que faltam
             nameMode       = "short", -- full | short | value (nome do encantamento)
             countRings     = false,  -- anéis só contam para quem tem Encantamento
+            inspect        = true,   -- também na janela de inspeção (mesmo visual)
+            inspectCountRings = false, -- anéis na inspeção (não dá para saber a profissão do outro)
             enchantedColor = { r = 0.1, g = 1.0, b = 0.1 },
             missingColor   = { r = 1.0, g = 0.15, b = 0.15 },
             fontSize       = 10,

@@ -34,10 +34,11 @@ instead of many, and each one can be turned on or off separately.
 - Shows cooldowns and item levels. Vertical or horizontal layout; dims or hides during combat.
 
 ### Item level and enchants
-- **Item level** on equipment in the default bags and on the character window, in item quality
-  color or a fixed color, on the corner you choose.
-- **Enchants** on the character window: shows which items are enchanted (full, abbreviated or
-  value-only name) and which are missing an enchant. Rings count only for Enchanters, if you want.
+- **Item level** on equipment in the default bags, on the character window and on the Inspect
+  window, in item quality color or a fixed color, on the corner you choose.
+- **Enchants** on the character window and on the Inspect window: shows which items are enchanted
+  (full, abbreviated or value-only name) and which are missing an enchant. Rings count only for
+  Enchanters, if you want (on the Inspect window, a separate option).
 
 ## Positioning
 
@@ -93,7 +94,7 @@ Utilidades para o **WoW Forever** reunidas num só addon, cada uma ligável e de
 - **Vendedores:** resumo de gold ao fechar (vendido, comprado, reparo e saldo).
 - **Coleção de aparências:** filtro por tipo de armadura na aba Itens.
 - **Seletor de berloques:** botões na tela para trocar de berloque com um clique, fora de combate.
-- **Nível de item e encantamentos:** nas bolsas padrão e na janela de personagem.
+- **Nível de item e encantamentos:** nas bolsas padrão, na janela de personagem e na janela de inspeção.
 
 Com o addon opcional **LibEditMode**, a barra de voo e o seletor de berloques são posicionados
 pelo **Modo de Edição** do jogo (por layout, com âncora em outras janelas). Sem ele, destrave e

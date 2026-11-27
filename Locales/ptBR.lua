@@ -224,6 +224,8 @@ ns.RegisterLocale("ptBR", {
     ["Show which items are enchanted"] = "Mostrar quais itens estão encantados",
     ["Also show the enchanted items"] = "Mostrar também os itens encantados",
     ["Count rings (Enchanting only)"] = "Contar anéis (só com Encantamento)",
+    ["Also on the Inspect window"] = "Também na janela de inspeção",
+    ["Count rings when inspecting"] = "Contar anéis na inspeção",
     ["Enchanted color"] = "Cor dos encantados",
     ["No enchant color"] = "Cor dos sem encantamento",
     ["Enchanted"] = "Encantado",

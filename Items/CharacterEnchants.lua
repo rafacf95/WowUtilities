@@ -1,10 +1,12 @@
 -- ============================================================
 --  CharacterEnchants.lua
---  Indica, ao lado dos botões de equipamento da janela de personagem,
---  quais itens estão encantados (nome do encantamento, em verde) e quais
---  estão sem (aviso em vermelho). A regra de quais slots contam e a
---  leitura do encantamento são do ns.EnchantInfo; a infraestrutura dos
---  botões é do ns.CharacterSlots.
+--  Indica, ao lado dos botões de equipamento da janela de personagem
+--  (e, se ligado, da janela de inspeção), quais itens estão encantados
+--  (nome do encantamento, em verde) e quais estão sem (aviso em vermelho).
+--  As duas janelas têm a mesma disposição de slots e o mesmo visual.
+--  A regra de quais slots contam e a leitura do encantamento são do
+--  ns.EnchantInfo; a infraestrutura dos
+--  botões é do ns.CharacterSlots / ns.InspectSlots.
 --  Posição do texto: nas colunas, ao lado do ícone voltado para o
 --  modelo do personagem; nos slots de baixo, a arma principal e a de
 --  longe ficam ao lado e a secundária em cima.
@@ -28,7 +30,6 @@ local PLACEMENT = {
     [16] = "left", [17] = "above", [18] = "right",                                              -- armas
 }
 
-local known = {}
 
 local function Cfg(key) return ns.Config:Get("items.characterEnchants." .. key) end
 
@@ -40,7 +41,7 @@ local function FontPath()
     return (ok and type(path) == "string") and path or FALLBACK_FONT
 end
 
-local function TextOf(button)
+local function TextOf(button, known)
     local text = rawget(button, FIELD)
     if text then return text end
     if type(button.CreateFontString) ~= "function" then return nil end
@@ -71,13 +72,13 @@ local function Clear(button)
     if text then text:SetText("") end
 end
 
-local function Paint(button, slotID)
+local function Paint(button, slotID, unit, opts, known)
     if not slotID then Clear(button) return end
-    local state, name = ns.EnchantInfo:Status(slotID, { countRings = Cfg("countRings") == true })
+    local state, name = ns.EnchantInfo:Status(slotID, opts, unit)
     if state == "enchanted" and not Cfg("showEnchanted") then state = nil end
     if not state then Clear(button) return end
 
-    local text = TextOf(button)
+    local text = TextOf(button, known)
     if not text then return end
     Place(text, button, slotID)
     text:SetFont(FontPath(), Cfg("fontSize"), "OUTLINE")
@@ -92,11 +93,24 @@ local function Paint(button, slotID)
     end
 end
 
-ns.CharacterSlots:Register({
-    path = "items.characterEnchants",
-    enabled = function() return Cfg("enabled") == true end,
-    paint = Paint,
-    clear = function() for button in pairs(known) do Clear(button) end end,
-})
+--- Registra o indicador num conjunto de botões; cada conjunto limpa só os seus.
+local function Attach(set, enabled, options)
+    local known = {}
+    set:Register({
+        path = "items.characterEnchants",
+        enabled = enabled,
+        paint = function(button, slotID, unit) Paint(button, slotID, unit, options(), known) end,
+        clear = function() for button in pairs(known) do Clear(button) end end,
+    })
+end
+
+Attach(ns.CharacterSlots,
+    function() return Cfg("enabled") == true end,
+    function() return { countRings = Cfg("countRings") == true } end)
+
+-- De outro jogador não dá para saber a profissão: os anéis seguem só a opção.
+Attach(ns.InspectSlots,
+    function() return Cfg("enabled") == true and Cfg("inspect") == true end,
+    function() return { countRings = Cfg("inspectCountRings") == true, anyRing = true } end)
 
 function Module:IsInstalled() return ns.CharacterSlots:IsInstalled() end

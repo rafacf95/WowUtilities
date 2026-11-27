@@ -24,9 +24,11 @@ end
 
 --- Cria um pintor que lê as opções de items.<prefix>.
 --- enabled, colorMode ("quality"|"fixed"), color, anchor, fontSize.
-function LevelText.Create(prefix)
+--- field (opcional) = campo do texto no botão; dois pintores com o mesmo
+--- prefix e campos diferentes compartilham as opções e limpam separados.
+function LevelText.Create(prefix, field)
     local painter = {}
-    local field = "wu" .. prefix
+    field = field or ("wu" .. prefix)
     local known = {} -- botões que já receberam texto (para limpar ao desligar)
 
     local function Cfg(key) return ns.Config:Get("items." .. prefix .. "." .. key) end

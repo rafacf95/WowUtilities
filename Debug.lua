@@ -65,4 +65,4 @@ ns.Commands:Register("debug", function(arg)
     else
         Dump(arg ~= "" and arg or "target")
     end
-end, "shows what the APIs return for a unit (/wu debug party2) or a subsystem (/wu debug wardrobe, /wu debug trinkets, /wu debug bags, /wu debug character, /wu debug enchants, /wu debug editmode, /wu debug anchors, /wu debug ui)")
+end, "shows what the APIs return for a unit (/wu debug party2) or a subsystem (/wu debug wardrobe, /wu debug trinkets, /wu debug bags, /wu debug character, /wu debug enchants, /wu debug editmode, /wu debug anchors, /wu debug ui, /wu debug inspect)")

@@ -44,7 +44,7 @@ instead of many, and each one can be turned on or off separately.
 - Turned off by default: enable it in `/wu` > Resource bar.
 
 ### Item level and enchants
-- **Item level** on equipment in the default bags, on the character window and on the Inspect
+- **Item level** on equipment in the default bags and bank, on the character window and on the Inspect
   window, in item quality color or a fixed color, on the corner you choose.
 - **Enchants** on the character window and on the Inspect window: shows which items are enchanted
   (full, abbreviated or value-only name) and which are missing an enchant. Rings count only for
@@ -69,7 +69,7 @@ when installed, its bar textures appear in the flight bar and resource bar optio
 | `/wu` or `/wowutilities` | Opens the settings window |
 | `/wu taxi` | Lists the recorded flight times |
 | `/wu taxi clear` | Deletes the recorded flight times (asks for confirmation) |
-| `/wu debug <name>` | Diagnostic report to copy into a bug report: `bags`, `character`, `enchants`, `inspect`, `power`, `editmode`, `anchors`, `trinkets`, `wardrobe`, `ui`, or a unit such as `target` |
+| `/wu debug <name>` | Diagnostic report to copy into a bug report: `bags`, `bank`, `character`, `enchants`, `inspect`, `power`, `editmode`, `anchors`, `trinkets`, `wardrobe`, `ui`, or a unit such as `target` |
 
 ## Installation
 
@@ -111,7 +111,7 @@ Utilidades para o **WoW Forever** reunidas num só addon, cada uma ligável e de
 - **Seletor de berloques:** botões na tela para trocar de berloque com um clique, fora de combate.
 - **Barra de recurso:** mana, raiva ou energia conforme a classe e a forma, com os pontos de combo
   para Ladinos e Druidas na Forma de Felino (desligada por padrão).
-- **Nível de item e encantamentos:** nas bolsas padrão, na janela de personagem e na janela de inspeção.
+- **Nível de item e encantamentos:** nas bolsas e no banco padrão, na janela de personagem e na janela de inspeção.
 
 Com o addon opcional **LibEditMode**, a barra de voo, a barra de recurso e o seletor de berloques são posicionados
 pelo **Modo de Edição** do jogo (por layout, com âncora em outras janelas). Sem ele, destrave e

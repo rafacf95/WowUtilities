@@ -60,6 +60,7 @@ local DEFAULTS = {
             color     = { r = 1.0, g = 1.0, b = 1.0 },   -- usada com colorMode = fixed
             anchor    = "BOTTOMRIGHT",                   -- canto do ícone
             fontSize  = 12,
+            bank      = true,  -- também no banco (mesmo visual)
         },
         characterLevel = {
             enabled   = true,

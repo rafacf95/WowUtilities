@@ -53,7 +53,8 @@ local tooltip = {
     { color = "tooltip.rareColor", label = L["Border color"], indent = 1, disabled = Off("tooltip.rareBorder") },
 }
 
-local function LevelRows(prefix, title, enable, hint, inspect)
+--- extra = { key, label } (opcional): caixa "também em..." logo abaixo de ligar.
+local function LevelRows(prefix, title, enable, hint, extra)
     local base = "items." .. prefix .. "."
     local function NotFixed() return not Get(base .. "enabled") or Get(base .. "colorMode") ~= "fixed" end
     local rows = {
@@ -73,17 +74,19 @@ local function LevelRows(prefix, title, enable, hint, inspect)
         { slider = base .. "fontSize", label = L["Text size"], indent = 1, min = 8, max = 20, step = 1, format = "%d" },
         { text = hint, font = "GameFontDisableSmall" },
     }
-    if inspect then
-        table.insert(rows, 3, { checkbox = base .. "inspect", label = L["Also on the Inspect window"], indent = 1 })
+    if extra then
+        table.insert(rows, 3, { checkbox = base .. extra.key, label = extra.label, indent = 1 })
     end
     return rows
 end
 
 local items = Append(Append(
     LevelRows("itemLevel", L["Item level on bags"], L["Show item level on equipment in your bags"],
-        L["Default game bags only. Open your bags to see the change."]),
+        L["Default game bags and bank only. Open your bags or the bank to see the change."],
+        { key = "bank", label = L["Also in the bank"] }),
     LevelRows("characterLevel", L["Item level on the character window"], L["Show item level on your equipped items"],
-        L["Open your character window to see the change."], true)), {
+        L["Open your character window to see the change."],
+        { key = "inspect", label = L["Also on the Inspect window"] })), {
     { header = L["Enchants on the character window"] },
     { checkbox = "items.characterEnchants.enabled", label = L["Show which items are enchanted"] },
     { checkbox = "items.characterEnchants.showEnchanted", label = L["Also show the enchanted items"], indent = 1 },

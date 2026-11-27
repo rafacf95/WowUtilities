@@ -1694,6 +1694,53 @@ test("items: nivel de item nas bolsas, so para equipamento", function()
     eq(rawget(helm, "wuitemLevel"):GetText(), "200", "religado")
 end)
 
+test("items: nivel de item no banco (BankPanel), com opcao propria", function()
+    -- Banco do Forever: pool de botoes; cada um diz a bolsa (aba) e o espaco
+    local panel = CreateFrame("Frame", "BankPanel", UIParent)
+    set("BankPanel", panel)
+    local buttons = {}
+    local function NewButton(bag, slot)
+        local b = CreateFrame("Button", nil, panel)
+        b.bag, b.slot = bag, slot
+        function b:GetBankTabID() return self.bag end
+        function b:GetContainerSlotID() return self.slot end
+        function b:Refresh() end
+        buttons[#buttons + 1] = b
+        return b
+    end
+    local helm, potion = NewButton(6, 1), NewButton(6, 2)
+    function panel:EnumerateValidItems() return ipairs(buttons) end
+    function panel:RefreshBankPanel() end
+    H.bags[6] = { [1] = { id = 1001 }, [2] = { id = 1002 } }
+    panel:Show()
+    H.fire("BANKFRAME_OPENED")
+    H.advance(0.5)
+    eq(rawget(helm, "wuitemLevelBank"):GetText(), "200", "elmo no banco")
+    check(rawget(potion, "wuitemLevelBank") == nil, "pocao sem texto")
+    eq((rawget(helm, "wuitemLevelBank"):GetTextColor()), 0.64, "cor da qualidade (opcao das bolsas)")
+
+    ns.Config:Set("items.itemLevel.anchor", "TOPLEFT")
+    eq((rawget(helm, "wuitemLevelBank"):GetPoint(1)), "TOPLEFT", "canto igual ao das bolsas")
+
+    H.bags[6] = { [2] = { id = 1001 } } -- elmo movido para o espaco 2
+    helm:Refresh(); potion:Refresh()
+    eq(rawget(helm, "wuitemLevelBank"):GetText(), "", "espaco vazio limpo")
+    eq(rawget(potion, "wuitemLevelBank"):GetText(), "200", "repinta no Refresh do botao")
+
+    ns.Config:Set("items.itemLevel.bank", false)
+    eq(rawget(potion, "wuitemLevelBank"):GetText(), "", "opcao do banco desligada limpa")
+    eq(rawget(ContainerFrame1.buttons[1], "wuitemLevel"):GetText(), "200", "bolsas continuam")
+    ns.Config:Set("items.itemLevel.bank", true)
+    eq(rawget(potion, "wuitemLevelBank"):GetText(), "200", "religado")
+    ns.Config:Set("items.itemLevel.enabled", false)
+    eq(rawget(potion, "wuitemLevelBank"):GetText(), "", "desligar as bolsas desliga o banco")
+
+    ns.Config:ResetSection("items")
+    H.bags[6] = nil
+    panel:Hide()
+    set("BankPanel", nil)
+end)
+
 test("items: nivel e encantamento na janela de personagem", function()
     H.advance(0.5)
     eq(rawget(CharacterHeadSlot, "wucharacterLevel"):GetText(), "200", "nivel do elmo")
@@ -2111,7 +2158,31 @@ test("debug: /wu debug power le recursos, pontos de combo, cores e eventos", fun
     check(not text:find("failed", 1, true), "relatorio sem falha")
 end)
 
-for _, sub in ipairs({ "player", "bags", "character", "enchants", "editmode", "anchors", "trinkets", "wardrobe", "ui", "inspect", "power" }) do
+test("debug: /wu debug bank le a janela do banco, as bolsas e os itens", function()
+    local bank = CreateFrame("Frame", "BankFrame", UIParent)
+    set("BankFrame", bank)
+    bank:Show()
+    local item = CreateFrame("Button", "BankFrameItem1", bank)
+    item:SetID(1)
+    set("BankFrameItem1", item)
+    H.bags[-1] = { [2] = { id = 1001 } }
+    H.fire("BANKFRAME_OPENED")
+    local text = table.concat(ns.DebugBank:Report(), "\n")
+    has(text, "Bank window open: yes", "banco aberto")
+    has(text, "BankFrame: IsShown true", "frame do banco")
+    has(text, "BankFrameItemN globals: 1 (first 1, last 1)", "botoes por nome")
+    has(text, "child#1", "filho listado")
+    has(text, "bag  -1 (BANK_CONTAINER): 16 slots, 1 items", "bolsa principal")
+    has(text, "bag   5 (bank bag 1)", "bolsas do banco")
+    has(text, "bag -1 slot 2:", "item de exemplo")
+    check(text:find("BANKFRAME_OPENED%s+%d+ |"), "evento contado")
+    check(not text:find("section error", 1, true), "secoes sem erro")
+    H.bags[-1] = nil
+    bank:Hide()
+    set("BankFrame", nil); set("BankFrameItem1", nil)
+end)
+
+for _, sub in ipairs({ "player", "bags", "character", "enchants", "editmode", "anchors", "trinkets", "wardrobe", "ui", "inspect", "power", "bank" }) do
     test("debug: /wu debug " .. sub .. " gera o relatorio sem falhar", function()
         SlashCmdList.WOWUTILITIES("debug " .. sub)
         local edit = H.find(function(o) return S(o).kind == "EditBox" and S(o).parent == WowUtilitiesTextWindowScroll end)

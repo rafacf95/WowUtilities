@@ -81,8 +81,31 @@ local DEFAULTS = {
             fontSize       = 10,
         },
     },
+    resource = {
+        enabled         = false,        -- desligada até o jogador ligar (aparece na tela)
+        visibility      = "always",     -- always | combat | combatOrTarget
+        width           = 220,
+        height          = 18,
+        scale           = 1,
+        texture         = "blizzard",
+        border          = "thin",
+        borderSize      = 1,
+        borderColor     = { r = 0, g = 0, b = 0 },
+        colorMode       = "power",      -- power (cor do jogo) | class | fixed
+        fillColor       = { r = 0.2, g = 0.6, b = 1.0 },
+        text            = "value",      -- none | value | both | percent
+        fontSize        = 12,
+        smooth          = true,         -- animação suave da barra
+        comboPoints     = true,
+        comboPosition   = "above",      -- above | below
+        comboHeight     = 8,
+        comboSpacing    = 2,
+        comboColor      = { r = 1.0, g = 0.96, b = 0.41 },
+        comboEmptyColor = { r = 0.15, g = 0.15, b = 0.15 },
+    },
     positions = {}, -- [nomeDoLayout] = { point, relPoint, x, y }
     trinketPositions = {}, -- idem, para o seletor de trinkets
+    resourcePositions = {}, -- idem, para a barra de recurso
 }
 
 local BAR_DEFAULT_POSITION = { point = "BOTTOM", relPoint = "BOTTOM", x = 0, y = 220 }

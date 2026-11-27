@@ -41,6 +41,37 @@ local SPECS = {
         { id = "vertical",   label = L["Vertical"] },
         { id = "horizontal", label = L["Horizontal"] },
     } },
+
+    -- Barra de recurso
+    ["resource.scale"]         = { kind = "slider", label = L["Scale"], min = 0.5, max = 2, step = 0.05, format = "%.2f" },
+    ["resource.width"]         = { kind = "slider", label = L["Width"], min = 60, max = 500, step = 5, format = "%d" },
+    ["resource.height"]        = { kind = "slider", label = L["Height"], min = 4, max = 60, step = 1, format = "%d" },
+    ["resource.fontSize"]      = { kind = "slider", label = L["Text size"], min = 8, max = 24, step = 1, format = "%d" },
+    ["resource.borderSize"]    = { kind = "slider", label = L["Border thickness"], min = 0, max = 16, step = 1, format = "%d" },
+    ["resource.fillColor"]     = { kind = "color", label = L["Bar color"] },
+    ["resource.visibility"]    = { kind = "dropdown", label = L["Visibility"], values = {
+        { id = "always",         label = L["Always"] },
+        { id = "combat",         label = L["In combat"] },
+        { id = "combatOrTarget", label = L["In combat or with a hostile target"] },
+    } },
+    ["resource.colorMode"]     = { kind = "dropdown", label = L["Color"], values = {
+        { id = "power", label = L["Resource color"] },
+        { id = "class", label = L["Class color"] },
+        { id = "fixed", label = L["Fixed color"] },
+    } },
+    ["resource.text"]          = { kind = "dropdown", label = L["Text"], values = {
+        { id = "none",    label = L["No text"] },
+        { id = "value",   label = L["Current value"] },
+        { id = "both",    label = L["Current / maximum"] },
+        { id = "percent", label = L["Percentage"] },
+    } },
+    ["resource.comboPoints"]   = { kind = "checkbox", label = L["Combo points"] },
+    ["resource.comboPosition"] = { kind = "dropdown", label = L["Combo points position"], values = {
+        { id = "above", label = L["Above the bar"] },
+        { id = "below", label = L["Below the bar"] },
+    } },
+    ["resource.comboHeight"]   = { kind = "slider", label = L["Combo points height"], min = 4, max = 30, step = 1, format = "%d" },
+    ["resource.comboSpacing"]  = { kind = "slider", label = L["Combo points spacing"], min = 0, max = 10, step = 1, format = "%d" },
 }
 
 --- Descrição da opção (nil se o caminho não estiver registrado).

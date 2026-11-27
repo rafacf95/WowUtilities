@@ -230,6 +230,7 @@ local function Build()
     frame:SetScript("OnShow", function() Window:Refresh() end)
     frame:SetScript("OnHide", function()
         ns.FlightCastBar:Preview(false)
+        if ns.ResourceBar:IsPreviewing() then ns.ResourceBar:Preview(false) end
         ns.Positioner:SetUnlocked(false)
         if ns.TrinketSelector.positioner then ns.TrinketSelector.positioner:SetUnlocked(false) end
     end)

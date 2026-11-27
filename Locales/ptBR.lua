@@ -266,6 +266,20 @@ ns.RegisterLocale("ptBR", {
     ["Value only"] = "Só o valor",
 })
 
+-- Rótulos curtos só para a caixa de opções do Edit Mode (estreita).
+-- Chave = a mesma chave em inglês acima; a janela /wu usa o texto completo.
+ns.RegisterEditModeLabels("ptBR", {
+    ["Show item level on icons"] = "Nível nos ícones",
+    ["Hide the selector in combat"] = "Ocultar em combate",
+    ["Combo points spacing"] = "Espaço entre pontos",
+    ["Combo points position"] = "Posição dos pontos",
+    ["Combo points height"] = "Altura dos pontos",
+    ["In combat or with a hostile target"] = "Combate ou alvo hostil",
+    ["Drain bar (like a channel)"] = "Esvaziar a barra",
+    ["Horizontal offset"] = "Ajuste horizontal",
+    ["Vertical offset"] = "Ajuste vertical",
+})
+
 -- Abreviações dos nomes de encantamento (termos do cliente em português)
 ns.RegisterEnchantAbbreviations("ptBR", {
     { "Todos os Atributos", "Todos" },

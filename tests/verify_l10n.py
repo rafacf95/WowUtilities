@@ -5,6 +5,8 @@ Uso (da raiz do repositório):  python tests\\verify_l10n.py
 Confere, em todos os .lua do addon (fora de tests/):
   1. toda chave L["..."] usada tem tradução em Locales/ptBR.lua;
   2. o ptBR.lua não tem chaves duplicadas;
+  2b. os rótulos curtos do Edit Mode (ns.RegisterEditModeLabels) só usam chaves que já têm
+      tradução normal e não se repetem;
   3. não há letras acentuadas em literais de texto fora de L[...] e de comentários
      (texto visível ao jogador deve passar por L; o ptBR.lua é a exceção).
 Também lista, só como aviso, as traduções que nenhum arquivo usa.
@@ -97,20 +99,28 @@ def tokens(src):
 
 KEY_PREFIX = re.compile(r"(?<![\w.:])L\s*\[\s*$")
 PTBR_ENTRY = re.compile(r"\[\s*$")
+EDIT_LABELS = "ns.RegisterEditModeLabels("
 
 
 def main():
     problems, used = [], {}
     ptbr_keys, ptbr_dupes = {}, []
+    edit_keys, edit_dupes = {}, []
 
     for rel, full in sorted(lua_files()):
         with open(full, encoding="utf-8") as fh:
             src = fh.read()
         is_ptbr = os.path.normcase(rel) == os.path.normcase(PTBR)
+        edit_start = src.count("\n", 0, src.find(EDIT_LABELS)) + 1 if EDIT_LABELS in src else None
         for _, text, line, prefix in tokens(src):
             if is_ptbr:
                 # Entradas da tabela: ["chave"] = "valor"
-                if PTBR_ENTRY.search(prefix):
+                if PTBR_ENTRY.search(prefix) and edit_start and line > edit_start:
+                    if text in edit_keys:
+                        edit_dupes.append((text, edit_keys[text], line))
+                    else:
+                        edit_keys[text] = line
+                elif PTBR_ENTRY.search(prefix):
                     if text in ptbr_keys:
                         ptbr_dupes.append((text, ptbr_keys[text], line))
                     else:
@@ -126,6 +136,11 @@ def main():
             problems.append("%s: chave sem traducao no ptBR.lua: %r" % (where, key))
     for key, first, again in ptbr_dupes:
         problems.append("%s:%d: chave duplicada (primeira na linha %d): %r" % (PTBR, again, first, key))
+    for key, first, again in edit_dupes:
+        problems.append("%s:%d: rotulo curto duplicado (primeiro na linha %d): %r" % (PTBR, again, first, key))
+    for key, line in sorted(edit_keys.items(), key=lambda kv: kv[1]):
+        if key not in ptbr_keys:
+            problems.append("%s:%d: rotulo curto sem traducao normal: %r" % (PTBR, line, key))
 
     unused = sorted(k for k in ptbr_keys if k not in used)
 
@@ -135,7 +150,7 @@ def main():
         print("AVISO: %d traducao(oes) sem uso:" % len(unused))
         for k in unused:
             print("  %s:%d: %r" % (PTBR, ptbr_keys[k], k))
-    print("Chaves usadas: %d | traducoes: %d" % (len(used), len(ptbr_keys)))
+    print("Chaves usadas: %d | traducoes: %d | rotulos curtos: %d" % (len(used), len(ptbr_keys), len(edit_keys)))
     print("PROBLEMAS: %d" % len(problems))
     return 1 if problems else 0
 

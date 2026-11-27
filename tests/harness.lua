@@ -1430,7 +1430,7 @@ if VARIANT.editmode then
         check(lem:Setting(bar, L["Width"]).disabled("Modern"), "largura travada")
         lem:Setting(bar, L["Anchor side"]).set("Modern", "LEFT")
         eq(ns.Config:GetBarAnchor("Modern").matchWidth, false, "lado sem largura desliga o ajuste")
-        lem:Setting(bar, L["Vertical offset"]).set("Modern", 7)
+        lem:Setting(bar, ns.EditModeLabel(L["Vertical offset"])).set("Modern", 7)
         local _, _, _, _, vy = bar:GetPoint(1)
         eq(vy, 7, "deslocamento vertical")
     end)
@@ -1626,7 +1626,13 @@ if VARIANT.editmode then
         local lem, f = H.lem, RFrame()
         ns.Config:Set("resource.visibility", "combat")
         eq(resource.positioner:Mode(), "editmode", "modo")
-        check(lem:Setting(f, L["Combo points position"]), "opcao dos pontos de combo")
+        check(lem:Setting(f, ns.EditModeLabel(L["Combo points position"])), "opcao dos pontos de combo")
+        if VARIANT.locale == "ptBR" then
+            check(lem:Setting(f, "Posição dos pontos"), "rotulo curto no Edit Mode (ptBR)")
+            check(not lem:Setting(f, L["Combo points position"]), "texto completo fica so na janela /wu")
+        else
+            eq(ns.EditModeLabel(L["Combo points position"]), L["Combo points position"], "sem rotulo curto fora do ptBR")
+        end
         check(lem:Setting(f, L["Anchor to"]), "ancoravel")
         lem:Setting(f, L["Width"]).set("Modern", 300)
         eq(ns.Config:Get("resource.width"), 300, "largura pelo Edit Mode")

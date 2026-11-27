@@ -110,6 +110,14 @@ local function AddSettings(lib, frame, items, extra, lockWidth)
     for _, setting in ipairs(extra or {}) do list[#list + 1] = setting end
     if #list == 0 then return nil end
 
+    -- A caixa do Edit Mode é estreita: rótulos curtos quando o idioma tiver
+    for _, setting in ipairs(list) do
+        setting.name = ns.EditModeLabel(setting.name)
+        if type(setting.values) == "table" then
+            for _, value in ipairs(setting.values) do value.text = ns.EditModeLabel(value.text) end
+        end
+    end
+
     local ok, err = pcall(lib.AddFrameSettings, lib, frame, list)
     if not ok then
         if geterrorhandler then geterrorhandler()(err) end

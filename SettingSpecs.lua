@@ -72,6 +72,7 @@ local SPECS = {
     } },
     ["resource.comboHeight"]   = { kind = "slider", label = L["Combo points height"], min = 4, max = 30, step = 1, format = "%d" },
     ["resource.comboSpacing"]  = { kind = "slider", label = L["Combo points spacing"], min = 0, max = 10, step = 1, format = "%d" },
+    ["resource.comboGap"]      = { kind = "slider", label = L["Distance from the bar"], min = 0, max = 20, step = 1, format = "%d" },
 }
 
 --- Descrição da opção (nil se o caminho não estiver registrado).

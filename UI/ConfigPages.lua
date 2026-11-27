@@ -137,6 +137,7 @@ Append(resource, {
       items = SpecItems("resource.comboPosition") },
     { slider = "resource.comboHeight", label = L["Combo points height"], indent = 1 },
     { slider = "resource.comboSpacing", label = L["Combo points spacing"], indent = 1 },
+    { slider = "resource.comboGap", label = L["Distance from the bar"], indent = 1 },
     { color = "resource.comboColor", label = L["Combo point color"], indent = 1 },
     { color = "resource.comboEmptyColor", label = L["Empty point color"], indent = 1 },
     { header = L["Position"] },

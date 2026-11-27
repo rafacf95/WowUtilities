@@ -145,7 +145,7 @@ end
 
 local function Layout()
     local combo = ShowsCombo()
-    local height, comboHeight, gap = Cfg("height"), Cfg("comboHeight"), Cfg("comboSpacing")
+    local height, comboHeight, gap = Cfg("height"), Cfg("comboHeight"), Cfg("comboGap")
     frame:SetSize(Cfg("width"), height + (combo and (comboHeight + gap) or 0))
     frame:SetScale(Cfg("scale"))
     if Bar.positioner then Bar.positioner:Replace(frame) end -- a escala mudou: mantém o ponto na tela
@@ -277,6 +277,7 @@ local function AttachPositioner()
             "resource.colorMode", "resource.fillColor", "resource.text", "resource.fontSize", "resource.borderSize",
             { divider = L["Combo points"] },
             "resource.comboPoints", "resource.comboPosition", "resource.comboHeight", "resource.comboSpacing",
+            "resource.comboGap",
         },
     })
     Bar.positioner:Attach(frame)

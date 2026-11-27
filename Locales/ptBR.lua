@@ -251,6 +251,7 @@ ns.RegisterLocale("ptBR", {
     ["Below the bar"] = "Abaixo da barra",
     ["Combo points height"] = "Altura dos pontos de combo",
     ["Combo points spacing"] = "Espaço entre os pontos de combo",
+    ["Distance from the bar"] = "Distância da barra",
     ["Combo point color"] = "Cor dos pontos de combo",
     ["Empty point color"] = "Cor dos pontos vazios",
     ["Position"] = "Posição",

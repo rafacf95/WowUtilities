@@ -99,7 +99,8 @@ local DEFAULTS = {
         comboPoints     = true,
         comboPosition   = "above",      -- above | below
         comboHeight     = 8,
-        comboSpacing    = 2,
+        comboSpacing    = 2,            -- espaço entre um ponto e outro
+        comboGap        = 2,            -- espaço entre os pontos e a barra
         comboColor      = { r = 1.0, g = 0.96, b = 0.41 },
         comboEmptyColor = { r = 0.15, g = 0.15, b = 0.15 },
     },

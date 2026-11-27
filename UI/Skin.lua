@@ -198,6 +198,9 @@ end
 
 --- Menu de seleção. items = lista { id, label } ou função que a devolve.
 --- opts.preview(item) -> path, r, g, b mostra uma textura de exemplo na opção.
+local MENU_MAX_ROWS = 15   -- acima disso o menu rola
+local MENU_ROW_HEIGHT = 20 -- altura de uma linha do menu da Blizzard
+
 function Skin.Dropdown(parent, items, get, set, width, opts)
     local dropdown = TryCreate("DropdownButton", nil, parent, "WowStyle1DropdownTemplate")
     if not (dropdown and type(dropdown.SetupMenu) == "function") then
@@ -209,7 +212,12 @@ function Skin.Dropdown(parent, items, get, set, width, opts)
 
     dropdown:SetWidth(width or 200)
     dropdown:SetupMenu(function(_, root)
-        for _, item in ipairs(List()) do
+        local list = List()
+        -- Lista longa (ex.: texturas do LibSharedMedia): menu com rolagem, como o de âncora do Edit Mode
+        if #list > MENU_MAX_ROWS and type(root.SetScrollMode) == "function" then
+            pcall(root.SetScrollMode, root, MENU_MAX_ROWS * MENU_ROW_HEIGHT)
+        end
+        for _, item in ipairs(list) do
             local radio = root:CreateRadio(item.label,
                 function() return get() == item.id end,
                 function() set(item.id) end)

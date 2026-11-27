@@ -5,6 +5,8 @@ instead of many, and each one can be turned on or off separately.
 
 > **WoW Forever only** (Interface 16001). It is not made for Retail, Classic Era or other clients.
 
+**Download:** [CurseForge](https://www.curseforge.com/wow/addons/wowutilities) · [GitHub Releases](../../releases)
+
 *Versão em português abaixo.*
 
 ## Features
@@ -71,7 +73,11 @@ when installed, its bar textures appear in the flight bar and resource bar optio
 
 ## Installation
 
-1. Download the latest zip from [Releases](../../releases) (CurseForge coming soon).
+The easiest way is the [CurseForge](https://www.curseforge.com/wow/addons/wowutilities) app,
+which also keeps the addon up to date. To install by hand:
+
+1. Download the latest zip from [CurseForge](https://www.curseforge.com/wow/addons/wowutilities/files)
+   or from [Releases](../../releases).
 2. Extract it into `World of Warcraft\_forever_\Interface\AddOns`, so that you get
    `AddOns\WowUtilities\WowUtilities.toc`.
 3. Restart the game or type `/reload`.
@@ -114,7 +120,8 @@ arraste pela janela de configuração.
 **Comandos:** `/wu` abre a configuração; `/wu taxi` lista os tempos de voo; `/wu taxi clear`
 apaga; `/wu debug <nome>` gera um relatório para anexar a relatos de bug.
 
-**Instalação:** baixe o zip em [Releases](../../releases) e extraia em
-`World of Warcraft\_forever_\Interface\AddOns`. Bugs e sugestões: abra uma [issue](../../issues)
+**Instalação:** pelo aplicativo do [CurseForge](https://www.curseforge.com/wow/addons/wowutilities)
+(que também atualiza o addon) ou baixando o zip no CurseForge ou em [Releases](../../releases) e
+extraindo em `World of Warcraft\_forever_\Interface\AddOns`. Bugs e sugestões: abra uma [issue](../../issues)
 (não aceitamos pull requests). Licença: uso livre, todos os direitos reservados; veja o
 [LICENSE](LICENSE).

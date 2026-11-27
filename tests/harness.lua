@@ -423,6 +423,7 @@ function Dropdown:GenerateMenu()
         self.radios[#self.radios + 1] = description
         return description
     end
+    function root:SetScrollMode(extent) self.scrollExtent = extent end
     S(self).generator(self, root)
     S(self).menu = root
 end
@@ -1996,6 +1997,23 @@ test("ui: Defaults restaura so a pagina aberta, com confirmacao", function()
     eq(ns.Config:Get("bar.width"), 250, "barra restaurada")
     eq(ns.Config:Get("vendor.showZero"), true, "outra pagina intacta")
     ns.Config:ResetSection("vendor")
+end)
+
+test("ui: lista longa (texturas) abre com rolagem", function()
+    local long = {}
+    for i = 1, 40 do long[i] = { id = "t" .. i, label = "Texture " .. i } end
+    local value = "t1"
+    local dropdown = ns.Skin.Dropdown(UIParent, function() return long end,
+        function() return value end, function(id) value = id end)
+    local short = ns.Skin.Dropdown(UIParent, { { id = "a", label = "A" } },
+        function() return "a" end, function() end)
+    if VARIANT.noTemplates then
+        check(dropdown and short, "fallback sem template")
+        return
+    end
+    eq(S(dropdown).menu.scrollExtent, 15 * 20, "menu longo rola")
+    eq(#S(dropdown).menu.radios, 40, "todos os itens")
+    eq(S(short).menu.scrollExtent, nil, "menu curto sem rolagem")
 end)
 
 test("ui: posicao da janela fica salva", function()

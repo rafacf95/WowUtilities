@@ -69,7 +69,7 @@ when installed, its bar textures appear in the flight bar and resource bar optio
 | `/wu` or `/wowutilities` | Opens the settings window |
 | `/wu taxi` | Lists the recorded flight times |
 | `/wu taxi clear` | Deletes the recorded flight times (asks for confirmation) |
-| `/wu debug <name>` | Diagnostic report to copy into a bug report: `bags`, `bank`, `character`, `enchants`, `inspect`, `power`, `editmode`, `anchors`, `trinkets`, `wardrobe`, `ui`, or a unit such as `target` |
+| `/wu debug <name>` | Diagnostic report to copy into a bug report: `bags`, `bank`, `character`, `enchants`, `inspect`, `power`, `swing`, `editmode`, `anchors`, `trinkets`, `wardrobe`, `ui`, or a unit such as `target` |
 
 ## Installation
 

@@ -87,3 +87,4 @@ DebugUI.lua
 DebugInspect.lua
 DebugPower.lua
 DebugBank.lua
+DebugSwing.lua

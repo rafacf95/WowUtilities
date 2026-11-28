@@ -343,7 +343,11 @@ function Frame:RegisterEvent(event)
     local s = S(self)
     if not s.events[event] then
         s.events[event] = true
-        H.eventFrames[#H.eventFrames + 1] = self
+        -- Uma entrada por frame (como no jogo, cada evento chega uma vez a cada frame)
+        if not s.listed then
+            s.listed = true
+            H.eventFrames[#H.eventFrames + 1] = self
+        end
     end
 end
 function Frame:UnregisterEvent(event) S(self).events[event] = nil end
@@ -2188,7 +2192,52 @@ test("debug: /wu debug bank le a janela do banco, as bolsas e os itens", functio
     set("BankFrame", nil); set("BankFrameItem1", nil)
 end)
 
-for _, sub in ipairs({ "player", "bags", "character", "enchants", "editmode", "anchors", "trinkets", "wardrobe", "ui", "inspect", "power", "bank" }) do
+test("debug: /wu debug swing le velocidade, eventos e a linha do tempo dos golpes", function()
+    set("UnitAttackSpeed", function() return 2.6, 1.8 end)
+    ns.DebugSwing:Clear()
+    H.fire("UNIT_COMBAT", "target", "WOUND", "", 120, 1)
+    H.advance(2.6)
+    H.fire("UNIT_COMBAT", "target", "WOUND", "", 118, 1)
+    H.fire("UNIT_COMBAT", "party1", "WOUND", "", 50, 1) -- outra unidade: fora da linha do tempo
+    H.fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", 78)
+    local text = table.concat(ns.DebugSwing:Report(), "\n")
+    has(text, "UnitAttackSpeed(player)        2.6 | 1.8", "velocidade crua")
+    has(text, "arithmetic on main hand speed: ok", "conta com a velocidade")
+    has(text, "+2.60s since last UNIT_COMBAT target", "intervalo entre golpes")
+    check(not text:find("UNIT_COMBAT (party1", 1, true), "so jogador e alvo na linha do tempo")
+    has(text, "UNIT_SPELLCAST_SUCCEEDED (player, Cast-1, 78)", "magia na linha do tempo")
+    check(not text:find("section error", 1, true), "secoes sem erro")
+
+    -- Busca: global/frame, API C_ e CVar com "swing" ou "autoattack" no nome
+    local frame = CreateFrame("Frame", "PlayerSwingTimerFrame", UIParent)
+    set("PlayerSwingTimerFrame", frame)
+    set("C_TestCombat", { GetAutoAttackInfo = function() end })
+    local oldConsole, oldCVar = rawget(_G, "C_Console"), rawget(_G, "C_CVar")
+    set("C_Console", { GetAllCommands = function()
+        return { { command = "showSwingTimer", commandType = 0, help = "Shows the swing timer" }, { command = "nameplateShowAll" } }
+    end })
+    set("C_CVar", { GetCVar = function(name) return name == "showSwingTimer" and "1" or nil end,
+                    GetCVarDefault = function() return "0" end })
+    text = table.concat(ns.DebugSwing:Report(), "\n")
+    has(text, "PlayerSwingTimerFrame = Frame frame (IsShown true)", "frame encontrado")
+    has(text, "C_TestCombat.GetAutoAttackInfo (function)", "API C_ encontrada")
+    has(text, "Console commands / CVars (1 of 2):", "so as CVars do termo")
+    has(text, "showSwingTimer | value 1 | default 0 | type 0 | help Shows the swing timer", "CVar com valor")
+    set("PlayerSwingTimerFrame", nil); set("C_TestCombat", nil)
+    set("C_Console", oldConsole); set("C_CVar", oldCVar)
+
+    ns.DebugSwing:Clear()
+    has(table.concat(ns.DebugSwing:Report(), "\n"), "(empty)", "clear zera a linha do tempo")
+    set("UnitAttackSpeed", nil)
+end)
+
+test("addon: nenhum frame ouve COMBAT_LOG_EVENT_UNFILTERED (acao protegida no Forever)", function()
+    for _, frame in ipairs(H.eventFrames) do
+        check(not S(frame).events.COMBAT_LOG_EVENT_UNFILTERED, "frame registrou o log de combate")
+    end
+end)
+
+for _, sub in ipairs({ "player", "bags", "character", "enchants", "editmode", "anchors", "trinkets", "wardrobe", "ui", "inspect", "power", "bank", "swing" }) do
     test("debug: /wu debug " .. sub .. " gera o relatorio sem falhar", function()
         SlashCmdList.WOWUTILITIES("debug " .. sub)
         local edit = H.find(function(o) return S(o).kind == "EditBox" and S(o).parent == WowUtilitiesTextWindowScroll end)

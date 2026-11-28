@@ -21,3 +21,6 @@ luac.out
 
 # Python (testes em tests/)
 __pycache__/
+
+# Textos para publicar (descricao do CurseForge etc.): ficam so na maquina do autor
+html/
